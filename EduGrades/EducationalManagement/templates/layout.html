@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EduGrade{% endblock %}</title>
+    
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            300: '#c4b5fd',
+                            400: '#a78bfa',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                        },
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out',
+                        'slide-up': 'slideUp 0.5s ease-out',
+                        'scale-in': 'scaleIn 0.3s ease-out',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        scaleIn: {
+                            '0%': { transform: 'scale(0.9)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' },
+                        },
+                    },
+                },
+            },
+        }
+    </script>
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Additional CSS/JS -->
+    {% block head %}{% endblock %}
+    
+    <style>
+        /* Custom styles */
+        .section {
+            display: none;
+        }
+        
+        .section.active {
+            display: block;
+        }
+        
+        .nav-link.active {
+            background-color: rgba(124, 58, 237, 0.1);
+            color: #7c3aed;
+        }
+        
+        .dark .nav-link.active {
+            background-color: rgba(139, 92, 246, 0.2);
+            color: #a78bfa;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300">
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="fixed top-4 right-4 z-50 w-full max-w-sm">
+                {% for category, message in messages %}
+                    {% set bg_color = 'bg-green-500' if category == 'success' else 'bg-red-500' if category == 'danger' else 'bg-blue-500' if category == 'info' else 'bg-yellow-500' %}
+                    <div class="{{ bg_color }} text-white px-4 py-3 rounded shadow-md mb-2 animate-fade-in">
+                        <div class="flex items-center justify-between">
+                            <p>{{ message }}</p>
+                            <button class="ml-4 text-white focus:outline-none" onclick="this.parentElement.parentElement.remove()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    
+    <!-- Main content -->
+    {% block content %}{% endblock %}
+    
+    <!-- Dark mode toggle script -->
+    <script>
+        // Dark mode functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check for saved theme preference or use the system preference
+            if (localStorage.getItem('color-theme') === 'dark' || 
+                (!localStorage.getItem('color-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+            
+            // Add toggle event listeners if theme toggle buttons exist
+            const themeToggleButtons = document.querySelectorAll('#theme-toggle');
+            themeToggleButtons.forEach(function(button) {
+                button.addEventListener('click', function() {
+                    // Toggle theme
+                    if (document.documentElement.classList.contains('dark')) {
+                        document.documentElement.classList.remove('dark');
+                        localStorage.setItem('color-theme', 'light');
+                    } else {
+                        document.documentElement.classList.add('dark');
+                        localStorage.setItem('color-theme', 'dark');
+                    }
+                });
+            });
+        });
+    </script>
+    
+    <!-- Additional JavaScript -->
+    {% block scripts %}{% endblock %}
+</body>
+</html>

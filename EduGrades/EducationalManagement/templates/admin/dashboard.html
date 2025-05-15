@@ -1,0 +1,310 @@
+{% extends 'layout.html' %}
+
+{% block title %}Panel de Administrador - EduGrade{% endblock %}
+
+{% block head %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<!-- Navbar -->
+<nav class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+            <div class="flex items-center">
+                <a href="{{ url_for('admin.dashboard') }}" class="flex items-center">
+                    <i class="fas fa-graduation-cap text-primary-600 dark:text-primary-400 text-xl mr-2"></i>
+                    <span class="font-bold text-xl">EduGrade</span>
+                </a>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400" aria-label="Cambiar tema">
+                    <i class="fas fa-moon dark:hidden"></i>
+                    <i class="fas fa-sun hidden dark:block"></i>
+                </button>
+                <div class="relative">
+                    <button class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none" aria-label="Notificaciones">
+                        <i class="fas fa-bell"></i>
+                    </button>
+                    <span class="absolute top-0 right-0 h-4 w-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">2</span>
+                </div>
+                <div class="relative">
+                    <button id="user-menu-button" class="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400" aria-expanded="false" aria-haspopup="true">
+                        <span class="sr-only">Abrir menú de usuario</span>
+                        <div class="h-8 w-8 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center text-primary-600 dark:text-primary-400">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    </button>
+                    
+                    <div id="user-menu" class="hidden origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
+                        <a href="{{ url_for('admin.dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Panel de Control</a>
+                        <a href="{{ url_for('admin.users') }}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Usuarios</a>
+                        <a href="{{ url_for('admin.reports') }}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Reportes</a>
+                        <a href="{{ url_for('auth.logout') }}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Cerrar Sesión</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header section -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 mb-6 animate-fade-in">
+        <div class="flex flex-col md:flex-row justify-between md:items-center">
+            <div class="flex items-center">
+                <div class="bg-primary-100 dark:bg-primary-900/50 p-3 rounded-lg">
+                    <i class="fas fa-tachometer-alt text-primary-600 dark:text-primary-400 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Panel de Administración</h1>
+                    <p class="text-gray-600 dark:text-gray-400 mt-1">Bienvenido, {{ current_user.get_full_name() }}</p>
+                </div>
+            </div>
+            <div class="mt-4 md:mt-0">
+                <a href="{{ url_for('admin.users') }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                    <i class="fas fa-users mr-2"></i>
+                    Gestionar Usuarios
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md animate-fade-in" style="animation-delay: 0.1s;">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 mr-4">
+                    <i class="fas fa-users text-lg"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Total de Usuarios</p>
+                    <p class="text-xl font-semibold text-gray-800 dark:text-white">{{ stats.total_users }}</p>
+                </div>
+            </div>
+            <div class="mt-4">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs text-gray-500 dark:text-gray-400">{{ stats.active_users }} activos</span>
+                    <span class="text-xs text-green-500">
+                        <i class="fas fa-arrow-up mr-1"></i>
+                        {{ (stats.active_users / stats.total_users * 100)|round|int if stats.total_users > 0 else 0 }}%
+                    </span>
+                </div>
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 mt-1">
+                    <div class="bg-blue-500 h-1.5 rounded-full" style="width: {{ (stats.active_users / stats.total_users * 100)|round|int if stats.total_users > 0 else 0 }}%"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md animate-fade-in" style="animation-delay: 0.2s;">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-green-100 dark:bg-green-900/30 text-green-500 dark:text-green-400 mr-4">
+                    <i class="fas fa-chalkboard-teacher text-lg"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Profesores</p>
+                    <p class="text-xl font-semibold text-gray-800 dark:text-white">{{ stats.total_teachers }}</p>
+                </div>
+            </div>
+            <div class="mt-4">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs text-gray-500 dark:text-gray-400">% del total</span>
+                    <span class="text-xs text-gray-500 dark:text-gray-400">
+                        {{ (stats.total_teachers / stats.total_users * 100)|round|int if stats.total_users > 0 else 0 }}%
+                    </span>
+                </div>
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 mt-1">
+                    <div class="bg-green-500 h-1.5 rounded-full" style="width: {{ (stats.total_teachers / stats.total_users * 100)|round|int if stats.total_users > 0 else 0 }}%"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md animate-fade-in" style="animation-delay: 0.3s;">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-500 dark:text-yellow-400 mr-4">
+                    <i class="fas fa-user-graduate text-lg"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Estudiantes</p>
+                    <p class="text-xl font-semibold text-gray-800 dark:text-white">{{ stats.total_students }}</p>
+                </div>
+            </div>
+            <div class="mt-4">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs text-gray-500 dark:text-gray-400">% del total</span>
+                    <span class="text-xs text-gray-500 dark:text-gray-400">
+                        {{ (stats.total_students / stats.total_users * 100)|round|int if stats.total_users > 0 else 0 }}%
+                    </span>
+                </div>
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 mt-1">
+                    <div class="bg-yellow-500 h-1.5 rounded-full" style="width: {{ (stats.total_students / stats.total_users * 100)|round|int if stats.total_users > 0 else 0 }}%"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md animate-fade-in" style="animation-delay: 0.4s;">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-500 dark:text-purple-400 mr-4">
+                    <i class="fas fa-book text-lg"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Cursos</p>
+                    <p class="text-xl font-semibold text-gray-800 dark:text-white">{{ stats.total_courses }}</p>
+                </div>
+            </div>
+            <div class="mt-4">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs text-gray-500 dark:text-gray-400">Promedio por profesor</span>
+                    <span class="text-xs text-gray-500 dark:text-gray-400">
+                        {{ (stats.total_courses / stats.total_teachers)|round(1) if stats.total_teachers > 0 else 0 }}
+                    </span>
+                </div>
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 mt-1">
+                    <div class="bg-purple-500 h-1.5 rounded-full" style="width: {{ min(100, (stats.total_courses / stats.total_teachers * 20))|round|int if stats.total_teachers > 0 else 0 }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Recent Users -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md col-span-1 animate-fade-in" style="animation-delay: 0.5s;">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <h2 class="text-lg font-medium text-gray-800 dark:text-white">Usuarios Recientes</h2>
+            </div>
+            <div class="p-6">
+                <ul class="divide-y divide-gray-200 dark:divide-gray-700">
+                    {% for user in recent_users %}
+                    <li class="py-4">
+                        <div class="flex items-center space-x-4">
+                            <div class="flex-shrink-0">
+                                <div class="h-10 w-10 rounded-full bg-primary-100 dark:bg-primary-900/50 flex items-center justify-center text-primary-600 dark:text-primary-400">
+                                    {% if user.role == 'admin' %}
+                                    <i class="fas fa-user-shield"></i>
+                                    {% elif user.role == 'teacher' %}
+                                    <i class="fas fa-chalkboard-teacher"></i>
+                                    {% else %}
+                                    <i class="fas fa-user-graduate"></i>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                    {{ user.first_name }} {{ user.last_name }}
+                                </p>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 truncate">
+                                    {{ user.email }}
+                                </p>
+                            </div>
+                            <div>
+                                {% if user.role == 'admin' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300">
+                                    Admin
+                                </span>
+                                {% elif user.role == 'teacher' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
+                                    Profesor
+                                </span>
+                                {% else %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
+                                    Estudiante
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <div class="mt-6">
+                    <a href="{{ url_for('admin.users') }}" class="text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-500 dark:hover:text-primary-300">Ver todos los usuarios
+                        <i class="fas fa-arrow-right ml-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Distribution Chart -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md col-span-1 lg:col-span-2 animate-fade-in" style="animation-delay: 0.6s;">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <h2 class="text-lg font-medium text-gray-800 dark:text-white">Distribución de Usuarios</h2>
+            </div>
+            <div class="p-6">
+                <div class="h-80">
+                    <canvas id="userDistributionChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // User menu toggle
+    document.getElementById('user-menu-button').addEventListener('click', function() {
+        document.getElementById('user-menu').classList.toggle('hidden');
+    });
+    
+    // Close the menu when clicking outside
+    document.addEventListener('click', function(event) {
+        const userMenu = document.getElementById('user-menu');
+        const userMenuButton = document.getElementById('user-menu-button');
+        
+        if (userMenu && !userMenu.classList.contains('hidden') && 
+            !userMenuButton.contains(event.target) && 
+            !userMenu.contains(event.target)) {
+            userMenu.classList.add('hidden');
+        }
+    });
+    
+    // Charts
+    document.addEventListener('DOMContentLoaded', function() {
+        // User distribution chart
+        const userDistributionChart = new Chart(
+            document.getElementById('userDistributionChart').getContext('2d'),
+            {
+                type: 'doughnut',
+                data: {
+                    labels: ['Administradores', 'Profesores', 'Estudiantes'],
+                    datasets: [{
+                        data: [
+                            {{ stats.total_users - stats.total_teachers - stats.total_students }}, 
+                            {{ stats.total_teachers }}, 
+                            {{ stats.total_students }}
+                        ],
+                        backgroundColor: [
+                            'rgba(220, 38, 38, 0.7)',  // Red for admins
+                            'rgba(59, 130, 246, 0.7)', // Blue for teachers
+                            'rgba(234, 179, 8, 0.7)',  // Yellow for students
+                        ],
+                        borderColor: [
+                            'rgba(220, 38, 38, 1)',
+                            'rgba(59, 130, 246, 1)',
+                            'rgba(234, 179, 8, 1)',
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        );
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,303 @@
+{% extends 'layout.html' %}
+
+{% block title %}Perfil de Profesor - EduGrade{% endblock %}
+
+{% block content %}
+<!-- Navbar -->
+<nav class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+            <div class="flex items-center">
+                <a href="{{ url_for('teacher.dashboard') }}" class="flex items-center">
+                    <i class="fas fa-graduation-cap text-primary-600 dark:text-primary-400 text-xl mr-2"></i>
+                    <span class="font-bold text-xl">EduGrade</span>
+                </a>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400" aria-label="Cambiar tema">
+                    <i class="fas fa-moon dark:hidden"></i>
+                    <i class="fas fa-sun hidden dark:block"></i>
+                </button>
+                <div class="relative">
+                    <button id="notifications-btn" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="Notificaciones">
+                        <i class="fas fa-bell"></i>
+                    </button>
+                    <span class="absolute top-0 right-0 h-4 w-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">5</span>
+                    
+                    <!-- Dropdown de notificaciones (oculto por defecto) -->
+                    <div id="notifications-dropdown" class="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 hidden animate-fade-in">
+                        <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                            <h3 class="font-semibold">Notificaciones</h3>
+                        </div>
+                        <div class="max-h-96 overflow-y-auto">
+                            <a href="#" class="block p-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-700">
+                                <div class="flex">
+                                    <div class="flex-shrink-0 h-9 w-9 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 mr-3">
+                                        <i class="fas fa-file-alt"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium">Nueva entrega: Proyecto Final</p>
+                                        <p class="text-xs text-gray-600 dark:text-gray-400">Alumno: Carlos García - Hace 10 min</p>
+                                    </div>
+                                </div>
+                            </a>
+                            <a href="#" class="block p-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-700">
+                                <div class="flex">
+                                    <div class="flex-shrink-0 h-9 w-9 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center text-red-600 dark:text-red-400 mr-3">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium">Recordatorio: Cierre de calificaciones</p>
+                                        <p class="text-xs text-gray-600 dark:text-gray-400">Vence mañana a las 23:59</p>
+                                    </div>
+                                </div>
+                            </a>
+                            <a href="#" class="block p-3 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <div class="flex">
+                                    <div class="flex-shrink-0 h-9 w-9 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-600 dark:text-green-400 mr-3">
+                                        <i class="fas fa-calendar-alt"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium">Junta departamental</p>
+                                        <p class="text-xs text-gray-600 dark:text-gray-400">Jueves, 20 de Noviembre - 15:00</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="p-2 border-t border-gray-200 dark:border-gray-700">
+                            <a href="#" class="block text-center text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300">Ver todas las notificaciones</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="relative">
+                    <button id="profile-menu-btn" class="flex items-center space-x-2 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <div class="h-8 w-8 rounded-full overflow-hidden bg-primary-600">
+                            <div class="h-full w-full flex items-center justify-center text-white">
+                                <i class="fas fa-user-tie"></i>
+                            </div>
+                        </div>
+                        <i class="fas fa-chevron-down text-xs"></i>
+                    </button>
+                    
+                    <!-- Dropdown del perfil (oculto por defecto) -->
+                    <div id="profile-dropdown" class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 hidden animate-fade-in">
+                        <div class="p-3 border-b border-gray-200 dark:border-gray-700 text-center">
+                            <p class="font-semibold">{{ current_user.get_full_name() }}</p>
+                            <p class="text-xs text-gray-600 dark:text-gray-400">{{ current_user.email }}</p>
+                        </div>
+                        <div>
+                            <a href="{{ url_for('teacher.dashboard') }}" class="block p-3 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center">
+                                <i class="fas fa-tachometer-alt w-5 text-gray-500 dark:text-gray-400"></i>
+                                <span>Dashboard</span>
+                            </a>
+                            <a href="#" class="block p-3 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center">
+                                <i class="fas fa-cog w-5 text-gray-500 dark:text-gray-400"></i>
+                                <span>Configuración</span>
+                            </a>
+                            <a href="{{ url_for('auth.logout') }}" class="block p-3 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center text-red-600 dark:text-red-400">
+                                <i class="fas fa-sign-out-alt w-5"></i>
+                                <span>Cerrar sesión</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="max-w-4xl mx-auto px-4 py-8">
+    <!-- Tarjeta principal del perfil -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden animate-scale-in">
+        <div class="bg-gradient-to-r from-primary-600 to-indigo-600 dark:from-primary-700 dark:to-indigo-800 h-40 relative">
+            <!-- Botón editar -->
+            <button class="absolute top-4 right-4 bg-white dark:bg-gray-800 rounded-full p-2 shadow-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200" aria-label="Editar perfil">
+                <i class="fas fa-pencil-alt text-gray-700 dark:text-gray-200"></i>
+            </button>
+            
+            <!-- Foto de perfil -->
+            <div class="absolute -bottom-16 left-8">
+                <div class="h-32 w-32 rounded-full border-4 border-white dark:border-gray-800 overflow-hidden shadow-lg bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
+                    <i class="fas fa-user-tie text-primary-600 dark:text-primary-400 text-5xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="pt-20 pb-8 px-8">
+            <div class="flex flex-col md:flex-row md:justify-between md:items-start">
+                <div>
+                    <h1 class="text-2xl font-bold">{{ current_user.get_full_name() }}</h1>
+                    <p class="text-gray-600 dark:text-gray-400 flex items-center">
+                        <i class="fas fa-chalkboard-teacher mr-2"></i>
+                        Profesor de {{ teacher.department or 'Sin departamento asignado' }}
+                    </p>
+                    <div class="mt-2 flex items-center text-gray-600 dark:text-gray-400">
+                        <i class="fas fa-envelope mr-2"></i>
+                        <span>{{ current_user.email }}</span>
+                    </div>
+                </div>
+                <div class="mt-4 md:mt-0 flex space-x-4">
+                    <div class="flex flex-col items-center bg-primary-50 dark:bg-primary-900/30 px-4 py-2 rounded-lg border border-primary-100 dark:border-primary-800">
+                        <span class="text-sm text-primary-700 dark:text-primary-300">Cursos</span>
+                        <span class="text-2xl font-bold text-primary-700 dark:text-primary-300">{{ courses_count }}</span>
+                    </div>
+                    <div class="flex flex-col items-center bg-indigo-50 dark:bg-indigo-900/30 px-4 py-2 rounded-lg border border-indigo-100 dark:border-indigo-800">
+                        <span class="text-sm text-indigo-700 dark:text-indigo-300">Alumnos</span>
+                        <span class="text-2xl font-bold text-indigo-700 dark:text-indigo-300">{{ students_count }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Sección Clases que imparte -->
+                <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-6">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center text-gray-900 dark:text-white">
+                        <i class="fas fa-book mr-2 text-primary-500 dark:text-primary-400"></i> Clases que imparte
+                    </h2>
+                    
+                    {% if courses %}
+                    <ul class="space-y-3">
+                        {% for course in courses %}
+                        <li class="bg-white dark:bg-gray-800 rounded-lg p-3 shadow-sm flex justify-between items-center">
+                            <div>
+                                <h3 class="font-medium text-gray-800 dark:text-white">{{ course.name }}</h3>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">{{ course.code }}</p>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-xs px-2 py-1 rounded-full flex items-center">
+                                    <i class="fas fa-users mr-1"></i> {{ course.student_count }}
+                                </span>
+                                <a href="{{ url_for('teacher.course_details', course_id=course.id) }}" class="ml-3 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300">
+                                    <i class="fas fa-arrow-right"></i>
+                                </a>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <div class="text-center py-8">
+                        <div class="mx-auto w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
+                            <i class="fas fa-book text-gray-400 dark:text-gray-500 text-2xl"></i>
+                        </div>
+                        <p class="text-gray-500 dark:text-gray-400">No hay cursos asignados</p>
+                        <a href="{{ url_for('teacher.add_course') }}" class="mt-2 inline-block text-primary-600 dark:text-primary-400 hover:underline">Añadir un curso</a>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Información de contacto y biodata -->
+                <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-6">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center text-gray-900 dark:text-white">
+                        <i class="fas fa-id-card mr-2 text-primary-500 dark:text-primary-400"></i> Información de contacto
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <h3 class="text-sm text-gray-500 dark:text-gray-400">Nombre de usuario</h3>
+                            <p class="text-gray-800 dark:text-white font-medium">{{ current_user.username }}</p>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-sm text-gray-500 dark:text-gray-400">Departamento</h3>
+                            <p class="text-gray-800 dark:text-white font-medium">{{ teacher.department or 'No especificado' }}</p>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-sm text-gray-500 dark:text-gray-400">Miembro desde</h3>
+                            <p class="text-gray-800 dark:text-white font-medium">{{ current_user.created_at.strftime('%d/%m/%Y') }}</p>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-sm text-gray-500 dark:text-gray-400">Título académico</h3>
+                            <p class="text-gray-800 dark:text-white font-medium">{{ teacher.title or 'No especificado' }}</p>
+                        </div>
+                        
+                        <!-- Acciones -->
+                        <div class="pt-4">
+                            <button class="w-full bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center justify-center">
+                                <i class="fas fa-edit mr-2"></i> Editar perfil
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Estadísticas y actividad reciente -->
+            <div class="mt-6">
+                <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Estadísticas de rendimiento</h2>
+                
+                <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Cursos activos</h3>
+                                <div class="rounded-full bg-blue-100 dark:bg-blue-900/30 p-2">
+                                    <i class="fas fa-book text-blue-500 dark:text-blue-400"></i>
+                                </div>
+                            </div>
+                            <p class="text-2xl font-bold text-gray-800 dark:text-white">{{ courses_count }}</p>
+                        </div>
+                        
+                        <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total estudiantes</h3>
+                                <div class="rounded-full bg-green-100 dark:bg-green-900/30 p-2">
+                                    <i class="fas fa-users text-green-500 dark:text-green-400"></i>
+                                </div>
+                            </div>
+                            <p class="text-2xl font-bold text-gray-800 dark:text-white">{{ students_count }}</p>
+                        </div>
+                        
+                        <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Promedio por curso</h3>
+                                <div class="rounded-full bg-purple-100 dark:bg-purple-900/30 p-2">
+                                    <i class="fas fa-chart-bar text-purple-500 dark:text-purple-400"></i>
+                                </div>
+                            </div>
+                            <p class="text-2xl font-bold text-gray-800 dark:text-white">{{ (students_count / courses_count)|round(1) if courses_count > 0 else 0 }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Profile dropdown toggle
+    document.getElementById('profile-menu-btn').addEventListener('click', function() {
+        document.getElementById('profile-dropdown').classList.toggle('hidden');
+    });
+    
+    // Notifications dropdown toggle
+    document.getElementById('notifications-btn').addEventListener('click', function() {
+        document.getElementById('notifications-dropdown').classList.toggle('hidden');
+    });
+    
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(event) {
+        // Profile dropdown
+        const profileDropdown = document.getElementById('profile-dropdown');
+        const profileBtn = document.getElementById('profile-menu-btn');
+        
+        if (profileDropdown && !profileDropdown.classList.contains('hidden') && 
+            !profileBtn.contains(event.target) && 
+            !profileDropdown.contains(event.target)) {
+            profileDropdown.classList.add('hidden');
+        }
+        
+        // Notifications dropdown
+        const notificationsDropdown = document.getElementById('notifications-dropdown');
+        const notificationsBtn = document.getElementById('notifications-btn');
+        
+        if (notificationsDropdown && !notificationsDropdown.classList.contains('hidden') && 
+            !notificationsBtn.contains(event.target) && 
+            !notificationsDropdown.contains(event.target)) {
+            notificationsDropdown.classList.add('hidden');
+        }
+    });
+</script>
+{% endblock %}

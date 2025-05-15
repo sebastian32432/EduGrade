@@ -1,0 +1,36 @@
+{% extends 'layout.html' %}
+
+{% block title %}Dashboard - EduGrade{% endblock %}
+
+{% block head %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<!-- Redirect based on user role -->
+<script>
+    // This is a temporary script to handle redirects
+    // In a real application, this would be handled by the server-side routing
+    document.addEventListener('DOMContentLoaded', function() {
+        const userRole = "{{ current_user.role }}";
+        
+        if (userRole === 'admin') {
+            window.location.href = "{{ url_for('admin.dashboard') }}";
+        } else if (userRole === 'teacher') {
+            window.location.href = "{{ url_for('teacher.dashboard') }}";
+        } else if (userRole === 'student') {
+            window.location.href = "{{ url_for('student.dashboard') }}";
+        }
+    });
+</script>
+
+<!-- Loading indicator until redirect completes -->
+<div class="flex items-center justify-center min-h-screen">
+    <div class="text-center">
+        <div class="inline-block w-16 h-16 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p class="text-xl text-gray-800 dark:text-white font-medium">Redirigiendo al panel apropiado...</p>
+        <p class="text-gray-500 dark:text-gray-400 mt-2">Por favor espere mientras lo redirigimos.</p>
+    </div>
+</div>
+{% endblock %}

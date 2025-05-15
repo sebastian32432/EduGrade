@@ -1,0 +1,344 @@
+{% extends 'layout.html' %}
+
+{% block title %}Reportes - EduGrade{% endblock %}
+
+{% block head %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- PDF Generation Libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<!-- Navbar -->
+<nav class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+            <div class="flex items-center">
+                <a href="{{ url_for('admin.dashboard') }}" class="flex items-center">
+                    <i class="fas fa-graduation-cap text-primary-600 dark:text-primary-400 text-xl mr-2"></i>
+                    <span class="font-bold text-xl">EduGrade</span>
+                </a>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400" aria-label="Cambiar tema">
+                    <i class="fas fa-moon dark:hidden"></i>
+                    <i class="fas fa-sun hidden dark:block"></i>
+                </button>
+                <div class="relative">
+                    <button class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none" aria-label="Notificaciones">
+                        <i class="fas fa-bell"></i>
+                    </button>
+                    <span class="absolute top-0 right-0 h-4 w-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">2</span>
+                </div>
+                <div class="relative">
+                    <button id="user-menu-button" class="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400" aria-expanded="false" aria-haspopup="true">
+                        <span class="sr-only">Abrir menú de usuario</span>
+                        <div class="h-8 w-8 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center text-primary-600 dark:text-primary-400">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    </button>
+                    
+                    <div id="user-menu" class="hidden origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
+                        <a href="{{ url_for('admin.dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Panel de Control</a>
+                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Configuración</a>
+                        <a href="{{ url_for('auth.logout') }}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Cerrar Sesión</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Main content -->
+<main class="container mx-auto px-4 py-8">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 md:p-8">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Reportes de Actividades</h2>
+            
+            <div class="flex flex-wrap gap-2">
+                <div class="dropdown relative">
+                    <button id="exportDropdownBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center">
+                        <i class="fas fa-file-export mr-2"></i> Exportar <i class="fas fa-chevron-down ml-2 text-xs"></i>
+                    </button>
+                    <div id="exportDropdown" class="dropdown-menu hidden absolute right-0 mt-2 bg-white dark:bg-gray-700 shadow-lg rounded-lg z-10 w-40 py-1">
+                        <button id="exportPdfBtn" class="w-full text-left px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors flex items-center">
+                            <i class="fas fa-file-pdf text-red-600 mr-2"></i> Exportar PDF
+                        </button>
+                        <button id="exportCsvBtn" class="w-full text-left px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors flex items-center">
+                            <i class="fas fa-file-csv text-green-600 mr-2"></i> Exportar CSV
+                        </button>
+                    </div>
+                </div>
+                <button id="refreshBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center">
+                    <i class="fas fa-sync-alt mr-2"></i> Actualizar
+                </button>
+                <select id="reportType" class="p-2 bg-gray-100 dark:bg-gray-700 border-0 rounded-lg focus:ring-2 focus:ring-primary" aria-label="Tipo de reporte">
+                    <option value="activity">Actividades</option>
+                    <option value="users">Usuarios</option>
+                    <option value="resources">Recursos</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Dashboard cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6" id="dashboard-cards">
+            <div class="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-xl shadow-sm transition-all duration-300 hover:shadow-md transform hover:-translate-y-1">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-blue-600 dark:text-blue-400 text-sm font-medium">Total Actividades</p>
+                        <h3 class="text-3xl font-bold mt-2 text-gray-800 dark:text-white" id="totalActivities">{{ stats.total_activities }}</h3>
+                    </div>
+                    <div class="bg-blue-100 dark:bg-blue-800/50 p-3 rounded-lg">
+                        <i class="fas fa-clipboard-list text-blue-600 dark:text-blue-400 text-xl"></i>
+                    </div>
+                </div>
+                <p class="text-gray-500 dark:text-gray-400 mt-4 text-sm"><i class="fas fa-arrow-up text-green-500 mr-1"></i> 12% este mes</p>
+            </div>
+
+            <div class="bg-green-50 dark:bg-green-900/20 p-6 rounded-xl shadow-sm transition-all duration-300 hover:shadow-md transform hover:-translate-y-1">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-green-600 dark:text-green-400 text-sm font-medium">Usuarios Activos</p>
+                        <h3 class="text-3xl font-bold mt-2 text-gray-800 dark:text-white" id="activeUsers">{{ stats.active_users }}</h3>
+                    </div>
+                    <div class="bg-green-100 dark:bg-green-800/50 p-3 rounded-lg">
+                        <i class="fas fa-users text-green-600 dark:text-green-400 text-xl"></i>
+                    </div>
+                </div>
+                <p class="text-gray-500 dark:text-gray-400 mt-4 text-sm"><i class="fas fa-arrow-up text-green-500 mr-1"></i> 8% este mes</p>
+            </div>
+
+            <div class="bg-purple-50 dark:bg-purple-900/20 p-6 rounded-xl shadow-sm transition-all duration-300 hover:shadow-md transform hover:-translate-y-1">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-purple-600 dark:text-purple-400 text-sm font-medium">Recursos Utilizados</p>
+                        <h3 class="text-3xl font-bold mt-2 text-gray-800 dark:text-white" id="resourcesUsed">{{ stats.resources_used }}</h3>
+                    </div>
+                    <div class="bg-purple-100 dark:bg-purple-800/50 p-3 rounded-lg">
+                        <i class="fas fa-book text-purple-600 dark:text-purple-400 text-xl"></i>
+                    </div>
+                </div>
+                <p class="text-gray-500 dark:text-gray-400 mt-4 text-sm"><i class="fas fa-arrow-down text-red-500 mr-1"></i> 3% este mes</p>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6" id="charts-container">
+            <!-- Activity Chart -->
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm">
+                <h3 class="text-base font-semibold mb-3 text-gray-800 dark:text-white">Actividades por Mes</h3>
+                <div class="h-64 md:h-80">
+                    <canvas id="activityChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Distribution Pie Chart -->
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm">
+                <h3 class="text-base font-semibold mb-3 text-gray-800 dark:text-white">Distribución por Tipo</h3>
+                <div class="h-64 md:h-80">
+                    <canvas id="distributionChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // User menu toggle
+    document.getElementById('user-menu-button').addEventListener('click', function() {
+        document.getElementById('user-menu').classList.toggle('hidden');
+    });
+    
+    // Export dropdown toggle
+    document.getElementById('exportDropdownBtn').addEventListener('click', function() {
+        document.getElementById('exportDropdown').classList.toggle('hidden');
+    });
+    
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(event) {
+        // User menu
+        const userMenu = document.getElementById('user-menu');
+        const userMenuButton = document.getElementById('user-menu-button');
+        
+        if (userMenu && !userMenu.classList.contains('hidden') && 
+            !userMenuButton.contains(event.target) && 
+            !userMenu.contains(event.target)) {
+            userMenu.classList.add('hidden');
+        }
+        
+        // Export dropdown
+        const exportDropdown = document.getElementById('exportDropdown');
+        const exportDropdownBtn = document.getElementById('exportDropdownBtn');
+        
+        if (exportDropdown && !exportDropdown.classList.contains('hidden') && 
+            !exportDropdownBtn.contains(event.target) && 
+            !exportDropdown.contains(event.target)) {
+            exportDropdown.classList.add('hidden');
+        }
+    });
+    
+    // Charts initialization
+    document.addEventListener('DOMContentLoaded', function() {
+        // Activity Chart
+        const activityChartCtx = document.getElementById('activityChart').getContext('2d');
+        const activityChart = new Chart(activityChartCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+                datasets: [{
+                    label: 'Actividades',
+                    data: {{ months_data|tojson }},
+                    backgroundColor: 'rgba(124, 58, 237, 0.5)',
+                    borderColor: 'rgba(124, 58, 237, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: document.documentElement.classList.contains('dark') ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: document.documentElement.classList.contains('dark') ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Distribution Chart
+        const distributionLabels = [];
+        const distributionData = [];
+        const distributionColors = [
+            'rgba(124, 58, 237, 0.7)',
+            'rgba(59, 130, 246, 0.7)',
+            'rgba(16, 185, 129, 0.7)',
+            'rgba(245, 158, 11, 0.7)'
+        ];
+        
+        {% for key, value in distribution_data.items() %}
+            distributionLabels.push('{{ key }}');
+            distributionData.push({{ value }});
+        {% endfor %}
+        
+        const distributionChartCtx = document.getElementById('distributionChart').getContext('2d');
+        const distributionChart = new Chart(distributionChartCtx, {
+            type: 'pie',
+            data: {
+                labels: distributionLabels,
+                datasets: [{
+                    data: distributionData,
+                    backgroundColor: distributionColors,
+                    borderColor: 'rgba(255, 255, 255, 0.5)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            color: document.documentElement.classList.contains('dark') ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Handle theme changes
+        document.getElementById('theme-toggle').addEventListener('click', function() {
+            // Update chart colors when theme changes
+            setTimeout(() => {
+                const isDark = document.documentElement.classList.contains('dark');
+                
+                // Update activity chart
+                activityChart.options.scales.y.grid.color = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+                activityChart.options.plugins.legend.labels.color = isDark ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)';
+                activityChart.update();
+                
+                // Update distribution chart
+                distributionChart.options.plugins.legend.labels.color = isDark ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)';
+                distributionChart.update();
+            }, 100);
+        });
+        
+        // Export PDF
+        document.getElementById('exportPdfBtn').addEventListener('click', function() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Add title
+            doc.setFontSize(18);
+            doc.text('Reporte de Actividades', 14, 20);
+            
+            // Add date
+            doc.setFontSize(10);
+            doc.text(`Generado: ${new Date().toLocaleDateString()}`, 14, 28);
+            
+            // Add statistics
+            doc.setFontSize(12);
+            doc.text('Estadísticas:', 14, 40);
+            doc.setFontSize(10);
+            doc.text(`Total de actividades: ${document.getElementById('totalActivities').textContent}`, 20, 48);
+            doc.text(`Usuarios activos: ${document.getElementById('activeUsers').textContent}`, 20, 54);
+            doc.text(`Recursos utilizados: ${document.getElementById('resourcesUsed').textContent}`, 20, 60);
+            
+            // Add charts
+            const addChartToPdf = (chartId, title, y) => {
+                const canvas = document.getElementById(chartId);
+                const imgData = canvas.toDataURL('image/png');
+                doc.text(title, 14, y);
+                doc.addImage(imgData, 'PNG', 14, y + 5, 180, 90);
+            };
+            
+            addChartToPdf('activityChart', 'Actividades por Mes:', 70);
+            addChartToPdf('distributionChart', 'Distribución por Tipo:', 170);
+            
+            // Save PDF
+            doc.save('reporte_actividades.pdf');
+        });
+        
+        // Export CSV
+        document.getElementById('exportCsvBtn').addEventListener('click', function() {
+            const csvContent = 'data:text/csv;charset=utf-8,Mes,Actividades\n' +
+                ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+                .map((month, index) => `${month},${activityChart.data.datasets[0].data[index]}`)
+                .join('\n');
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement('a');
+            link.setAttribute('href', encodedUri);
+            link.setAttribute('download', 'actividades_por_mes.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+        
+        // Refresh button
+        document.getElementById('refreshBtn').addEventListener('click', function() {
+            window.location.reload();
+        });
+    });
+</script>
+{% endblock %}

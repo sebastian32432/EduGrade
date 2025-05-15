@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="es" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sistema de login seguro y moderno para la plataforma educativa EduGrade">
+    <title>Iniciar Sesión - EduGrade</title>
+    
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            300: '#c4b5fd',
+                            400: '#a78bfa',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                        },
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.6s ease-out',
+                        'slide-up': 'slideUp 0.6s ease-out',
+                        'float': 'float 3s ease-in-out infinite',
+                        'spin': 'spin 1s linear infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        float: {
+                            '0%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                            '100%': { transform: 'translateY(0px)' },
+                        },
+                        spin: {
+                            '0%': { transform: 'rotate(0deg)' },
+                            '100%': { transform: 'rotate(360deg)' },
+                        },
+                    },
+                },
+            },
+        }
+    </script>
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gradient-to-br from-primary-500 to-purple-600 dark:from-primary-800 dark:to-purple-900 min-h-screen flex items-center justify-center p-4 transition-colors duration-300">
+    <!-- Theme toggle button -->
+    <button id="theme-toggle" class="fixed top-4 right-4 p-2 bg-white dark:bg-gray-800 text-primary-600 dark:text-primary-400 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 z-10" aria-label="Cambiar tema">
+        <i class="fas fa-moon dark:hidden"></i>
+        <i class="fas fa-sun hidden dark:block"></i>
+    </button>
+
+    <!-- Login Container -->
+    <div class="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden animate-fade-in">
+        <!-- Header with logo -->
+        <div class="p-8 text-center">
+            <div class="inline-flex items-center justify-center h-16 w-16 bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400 rounded-full mb-4 animate-float">
+                <i class="fas fa-graduation-cap text-3xl"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-800 dark:text-white mb-1">EduGrade</h1>
+            <p class="text-gray-600 dark:text-gray-300">Sistema de Gestión Académica</p>
+        </div>
+        
+        <!-- Login Panel -->
+        <div id="login-panel" class="p-8 animate-slide-up" role="tabpanel">
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-6">Bienvenido de nuevo</h2>
+            
+            <!-- Message Container -->
+            <div id="login-message" class="mb-4 p-4 rounded-lg text-sm font-medium hidden">
+                <div id="login-message-content" class="flex items-center">
+                    <i id="login-message-icon" class="mr-2"></i>
+                    <span id="login-message-text"></span>
+                </div>
+            </div>
+            
+            <form id="login-form" class="space-y-4">
+                <!-- Email Field -->
+                <div>
+                    <label for="login-email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Correo Electrónico</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-envelope text-gray-400 dark:text-gray-500"></i>
+                        </div>
+                        <input type="email" id="login-email" name="email" placeholder="ejemplo@correo.com" required class="pl-10 w-full py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-primary-500 dark:focus:border-primary-400 transition-colors duration-200 text-base" autocomplete="email">
+                        <div class="error-message text-red-500 text-xs mt-1 hidden"></div>
+                    </div>
+                </div>
+                
+                <!-- Password Field -->
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <label for="login-password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Contraseña</label>
+                        <button type="button" id="forgot-password-link" class="text-xs text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 focus:outline-none">¿Olvidaste tu contraseña?</button>
+                    </div>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-lock text-gray-400 dark:text-gray-500"></i>
+                        </div>
+                        <input type="password" id="login-password" name="password" placeholder="Ingresa tu contraseña" required class="pl-10 w-full py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-primary-500 dark:focus:border-primary-400 transition-colors duration-200 text-base" autocomplete="current-password">
+                        <button type="button" class="password-toggle absolute inset-y-0 right-0 pr-3 flex items-center" aria-label="Mostrar contraseña">
+                            <i class="fas fa-eye text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"></i>
+                        </button>
+                        <div class="error-message text-red-500 text-xs mt-1 hidden"></div>
+                    </div>
+                </div>
+                
+                <!-- Remember Me -->
+                <div class="flex items-center">
+                    <input id="remember" name="remember" type="checkbox" class="h-4 w-4 text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-400 border-gray-300 dark:border-gray-600 rounded transition-colors duration-200">
+                    <label for="remember" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">Recordar sesión</label>
+                </div>
+                
+                <!-- Login Button -->
+                <button type="submit" id="login-button" class="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 dark:bg-primary-700 dark:hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 transition-colors duration-200">
+                    <span>Iniciar Sesión</span>
+                </button>
+            </form>
+
+            <!-- Credentials Help -->
+            <div class="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800/30">
+                <h3 class="text-sm font-medium text-blue-800 dark:text-blue-300 mb-2">Credenciales de demostración:</h3>
+                <ul class="text-xs text-blue-700 dark:text-blue-400 space-y-1">
+                    <li><strong>Estudiante:</strong> estudiante@edugrade.com / estudiante123</li>
+                    <li><strong>Profesor:</strong> profesor@edugrade.com / profesor123</li>
+                    <li><strong>Administrador:</strong> admin@edugrade.com / admin123</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Forgot Password Modal -->
+    <div id="forgot-password-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md m-4 animate-fade-in">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">Recuperar Contraseña</h3>
+                    <button type="button" id="close-forgot-password-modal" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 focus:outline-none">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div id="forgot-password-message" class="mb-4 p-4 rounded-lg text-sm font-medium hidden">
+                    <div id="forgot-password-message-content" class="flex items-center">
+                        <i id="forgot-password-message-icon" class="mr-2"></i>
+                        <span id="forgot-password-message-text"></span>
+                    </div>
+                </div>
+                
+                <form id="forgot-password-form" class="space-y-4">
+                    <div>
+                        <label for="forgot-password-email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Correo Electrónico</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-envelope text-gray-400 dark:text-gray-500"></i>
+                            </div>
+                            <input type="email" id="forgot-password-email" name="email" placeholder="Ingresa tu correo electrónico" required class="pl-10 w-full py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-primary-500 dark:focus:border-primary-400 transition-colors duration-200 text-base">
+                            <div class="error-message text-red-500 text-xs mt-1 hidden"></div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="w-full py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 dark:bg-primary-700 dark:hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 transition-colors duration-200">
+                        Enviar Instrucciones
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Preview Modal -->
+    <div id="dashboard-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl m-4 animate-fade-in">
+            <div class="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
+                <h3 id="dashboard-title" class="text-xl font-medium text-gray-900 dark:text-white">Dashboard</h3>
+                <button type="button" id="close-dashboard-modal" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 focus:outline-none">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="dashboard-content" class="p-6">
+                <!-- Dashboard content will be inserted here dynamically -->
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Hardcoded user credentials (in a real app, this would be stored securely on the server)
+        const users = [
+            { email: 'estudiante@edugrade.com', password: 'estudiante123', role: 'estudiante', name: 'Carlos Pérez' },
+            { email: 'profesor@edugrade.com', password: 'profesor123', role: 'profesor', name: 'María González' },
+            { email: 'admin@edugrade.com', password: 'admin123', role: 'admin', name: 'Alejandro Rodríguez' }
+        ];
+        
+        // Dashboard templates for each user role
+        const dashboardTemplates = {
+            estudiante: `
+                <div class="space-y-6">
+                    <div class="flex items-center space-x-4">
+                        <div class="h-12 w-12 rounded-full bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center">
+                            <i class="fas fa-user-graduate text-primary-600 dark:text-primary-400"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-medium text-gray-900 dark:text-white">Bienvenido, <span id="user-name">Estudiante</span></h4>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Panel de Estudiante</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-white dark:bg-gray-700 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-600">
+                            <h5 class="font-medium text-gray-900 dark:text-white mb-2">Mis Cursos</h5>
+                            <ul class="space-y-2">
+                                <li class="flex justify-between items-center p-2 hover:bg-gray-50 dark:hover:bg-gray-600 rounded">
+                                    <span class="text-gray-700 dark:text-gray-300">Matemáticas Avanzadas</span>
+                                    <span class="text-sm px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 rounded">90%</span>
+                                </li>
+                                <li class="flex justify-between items-center p-2 hover:bg-gray-50 dark:hover:bg-gray-600 rounded">
+                                    <span class="text-gray-700 dark:text-gray-300">Historia Contemporánea</span>
+                                    <span class="text-sm px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 rounded">75%</span>
+                                </li>
+                                <li class="flex justify-between items-center p-2 hover:bg-gray-50 dark:hover:bg-gray-600 rounded">
+                                    <span class="text-gray-700 dark:text-gray-300">Programación Web</span>
+                                    <span class="text-sm px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 rounded">85%</span>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-white dark:bg-gray-700 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-600">
+                            <h5 class="font-medium text-gray-900 dark:text-white mb-2">Próximas Entregas</h5>
+                            <ul class="space-y-2">
+                                <li class="flex justify-between items-center p-2 hover:bg-gray-50 dark:hover:bg-gray-600 rounded">
+                                    <div>
+                                        <p class="text-gray-700 dark:text-gray-300">Proyecto Final</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">Programación Web</p>
+                                    </div>
+                                    <span class="text-sm px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 rounded">2 días</span>
+                                </li>
+                                <li class="flex justify-between items-center p-2 hover:bg-gray-50 dark:hover:bg-gray-600 rounded">
+                                    <div>
+                                        <p class="text-gray-700 dark:text-gray-300">Ensayo Historia</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">Historia Contemporánea</p>
+                                    </div>
+                                    <span class="text-sm px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-400 rounded">5 días</span>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-white dark:bg-gray-700 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-600 md:col-span-2">
+                            <h5 class="font-medium text-gray-900 dark:text-white mb-2">Rendimiento Académico</h5>
+                            <div class="h-48 flex items-center justify-center">
+                                <div class="flex items-end h-32 space-x-4">
+                                    <div class="flex flex-col items-center">
+                                        <div class="w-12 bg-primary-500 dark:bg-primary-400 rounded-t-lg h-24"></div>
+                                        <span class="text-xs mt-1 text-gray-600 dark:text-gray-400">Ene</span>
+                                    </div>
+                                    <div class="flex flex-col items-center">
+                                        <div class="w-12 bg-primary-500 dark:bg-primary-400 rounded-t-lg h-20"></div>
+                                        <span class="text-xs mt-1 text-gray-600 dark:text-gray-400">Feb</span>
+                                    </div>
+                                    <div class="flex flex-col items-center">
+                                        <div class="w-12 bg-primary-500 dark:bg-primary-400 rounded-t-lg h-28"></div>
+                                        <span class="text-xs mt-1 text-gray-600 dark:text-gray-400">Mar</span>
+                                    </div>
+                                    <div class="flex flex-col items-center">
+                                        <div class="w-12 bg-primary-500 dark:bg-primary-400 rounded-t-lg h-24"></div>
+                                        <span class="text-xs mt-1 text-gray-600 dark:text-gray-400">Abr</span>
+                                    </div>
+                                    <div class="flex flex-col items-center">
+                                        <div class="w-12 bg-primary-500 dark:bg-primary-400 rounded-t-lg h-32"></div>
+                                        <span class="text-xs mt-1 text-gray-600 dark:text-gray-400">May</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `,
+            profesor: `
+                <div class="space-y-6">
+                    <div class="flex items-center space-x-4">
+                        <div class="h-12 w-12 rounded-full bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center">
+                            <i class="fas fa-chalkboard-teacher text-primary-600 dark:text-primary-400"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-medium text-gray-900 dark:text-white">Bienvenido, <span id="user-name">Profesor</span></h4>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Panel de Profesor</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-white dark:bg-gray-700 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-600">
+                            <h5 class="font-medium text-gray-900 dark:text-white mb-2">Mis Clases</h5>
+                            <ul class="space-y-2">
+                                <li class="flex justify-between items-center p-2 hover:bg-gray-50 dark:hover:bg-gray-600 rounded">
+                                    <span class="text-gray-700 dark:text-gray-300">Programación Web - Grupo A</span>
+                                    <span class="text-sm px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 rounded">28 estudiantes</span>
+                                </li>
+                                <li class="flex justify-between items-center p-2 hover:bg-gray-50 dark:hover:bg-gray-600 rounded">
+                                    <span class="text-gray-700 dark:text-gray-300">Programación Web - Grupo B</span>
+                                    <span class="text-sm px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 rounded">32 estudiantes</span>
+                                </li>
+                                <li class="flex justify-between items-center p-2 hover:bg-gray-50 dark:hover:bg-gray-600 rounded">
+                                    <span class="text-gray-700 dark:text-gray-300">Bases de Datos</span>
+                                    <span class="text-sm px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 rounded">25 estudiantes</span>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-white dark:bg-gray-700 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-600">
+                            <h5 class="font-medium text-gray-900 dark:text-white mb-2">Actividades Pendientes</h5>
+                            <ul class="space-y-2">
+                                <li class="flex justify-between items-center p-2 hover:bg-gray-50 dark:hover:bg-gray-600 rounded">
+                                    <div>
+                                        <p class="text-gray-700 dark:text-gray-300">Calificar Proyectos</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">Programación Web - Grupo A</p>
+                                    </div>
+                                    <span class="text-sm px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 rounded">15 pendientes</span>
+                                </li>
+                                <li class="flex justify-between items-center p-2 hover:bg-gray-50 dark:hover:bg-gray-600 rounded">
+                                    <div>
+                                        <p class="text-gray-700 dark:text-gray-300">Preparar Examen</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">Bases de Datos</p>
+                                    </div>
+                                    <span class="text-sm px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-400 rounded">3 días</span>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-white dark:bg-gray-700 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-600 md:col-span-2">
+                            <h5 class="font-medium text-gray-900 dark:text-white mb-2">Rendimiento de Estudiantes</h5>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                    <thead>
+                                        <tr>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Grupo</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Promedio</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Asistencia</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Entregas</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                                        <tr>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">Programación Web - A</td>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">8.5</td>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">92%</td>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">88%</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">Programación Web - B</td>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">7.9</td>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">85%</td>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">78%</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">Bases de Datos</td>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">8.2</td>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">90%</td>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">85%</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `,
+            admin: `
+                <div class="space-y-6">
+                    <div class="flex items-center space-x-4">
+                        <div class="h-12 w-12 rounded-full bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center">
+                            <i class="fas fa-user-shield text-primary-600 dark:text-primary-400"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-medium text-gray-900 dark:text-white">Bienvenido, <span id="user-name">Administrador</span></h4>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Panel de Administración</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-white dark:bg-gray-700 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-600">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">Total Estudiantes</p>
+                                    <h5 class="text-2xl font-bold text-gray-900 dark:text-white">1,247</h5>
+                                </div>
+                                <div class="rounded-full p-2 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                            </div>
+                            <p class="text-xs text-green-600 dark:text-green-400 mt-2">
+                                <i class="fas fa-arrow-up mr-1"></i> 12% desde el último periodo
+                            </p>
+                        </div>
+                        
+                        <div class="bg-white dark:bg-gray-700 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-600">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">Total Profesores</p>
+                                    <h5 class="text-2xl font-bold text-gray-900 dark:text-white">42</h5>
+                                </div>
+                                <div class="rounded-full p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                                    <i class="fas fa-chalkboard-teacher"></i>
+                                </div>
+                            </div>
+                            <p class="text-xs text-blue-600 dark:text-blue-400 mt-2">
+                                <i class="fas fa-arrow-up mr-1"></i> 4% desde el último periodo
+                            </p>
+                        </div>
+                        
+                        <div class="bg-white dark:bg-gray-700 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-600">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">Total Cursos</p>
+                                    <h5 class="text-2xl font-bold text-gray-900 dark:text-white">68</h5>
+                                </div>
+                                <div class="rounded-full p-2 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
+                                    <i class="fas fa-book"></i>
+                                </div>
+                            </div>
+                            <p class="text-xs text-purple-600 dark:text-purple-400 mt-2">
+                                <i class="fas fa-arrow-up mr-1"></i> 8% desde el último periodo
+                            </p>
+                        </div>
+                        
+                        <div class="bg-white dark:bg-gray-700 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-600 md:col-span-2">
+                            <h5 class="font-medium text-gray-900 dark:text-white mb-4">Usuarios Recientes</h5>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                    <thead>
+                                        <tr>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Usuario</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Rol</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Fecha</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                                        <tr>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">Laura Martínez</td>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">Estudiante</td>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">18/05/2023</td>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm">
+                                                <span class="px-2 py-1 text-xs rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400">Activo</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">Fernando López</td>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">Profesor</td>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">15/05/2023</td>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm">
+                                                <span class="px-2 py-1 text-xs rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400">Activo</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">Elena García</td>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">Estudiante</td>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">12/05/2023</td>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm">
+                                                <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400">Pendiente</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white dark:bg-gray-700 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-600">
+                            <h5 class="font-medium text-gray-900 dark:text-white mb-4">Acciones Rápidas</h5>
+                            <div class="space-y-2">
+                                <button class="w-full flex items-center justify-between p-2 text-left bg-gray-50 dark:bg-gray-600 hover:bg-gray-100 dark:hover:bg-gray-500 rounded-lg transition-colors">
+                                    <span class="text-sm text-gray-700 dark:text-gray-300">Agregar Usuario</span>
+                                    <i class="fas fa-user-plus text-gray-500 dark:text-gray-400"></i>
+                                </button>
+                                <button class="w-full flex items-center justify-between p-2 text-left bg-gray-50 dark:bg-gray-600 hover:bg-gray-100 dark:hover:bg-gray-500 rounded-lg transition-colors">
+                                    <span class="text-sm text-gray-700 dark:text-gray-300">Crear Curso</span>
+                                    <i class="fas fa-folder-plus text-gray-500 dark:text-gray-400"></i>
+                                </button>
+                                <button class="w-full flex items-center justify-between p-2 text-left bg-gray-50 dark:bg-gray-600 hover:bg-gray-100 dark:hover:bg-gray-500 rounded-lg transition-colors">
+                                    <span class="text-sm text-gray-700 dark:text-gray-300">Generar Reportes</span>
+                                    <i class="fas fa-chart-line text-gray-500 dark:text-gray-400"></i>
+                                </button>
+                                <button class="w-full flex items-center justify-between p-2 text-left bg-gray-50 dark:bg-gray-600 hover:bg-gray-100 dark:hover:bg-gray-500 rounded-lg transition-colors">
+                                    <span class="text-sm text-gray-700 dark:text-gray-300">Configuración</span>
+                                    <i class="fas fa-cog text-gray-500 dark:text-gray-400"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `
+        };
+
+        // DOM elements
+        const elements = {
+            forms: {
+                login: document.getElementById('login-form'),
+                forgotPassword: document.getElementById('forgot-password-form')
+            },
+            inputs: {
+                email: document.getElementById('login-email'),
+                password: document.getElementById('login-password')
+            },
+            messages: {
+                login: document.getElementById('login-message'),
+                forgotPassword: document.getElementById('forgot-password-message')
+            },
+            modals: {
+                forgotPassword: document.getElementById('forgot-password-modal'),
+                dashboard: document.getElementById('dashboard-modal')
+            },
+            buttons: {
+                login: document.getElementById('login-button'),
+                forgotPasswordLink: document.getElementById('forgot-password-link'),
+                closeForgotPassword: document.getElementById('close-forgot-password-modal'),
+                closeDashboard: document.getElementById('close-dashboard-modal')
+            }
+        };
+        
+        // Helper functions
+        const showMessage = (messageElement, type, text) => {
+            const messageContent = messageElement.querySelector('[id$="-message-content"]');
+            const messageIcon = messageElement.querySelector('[id$="-message-icon"]');
+            const messageText = messageElement.querySelector('[id$="-message-text"]');
+            
+            if (type === 'success') {
+                messageContent.classList.remove('bg-red-100', 'text-red-700', 'dark:bg-red-900/30', 'dark:text-red-400', 'border-red-200', 'dark:border-red-800/50');
+                messageContent.classList.add('bg-green-100', 'text-green-700', 'dark:bg-green-900/30', 'dark:text-green-400', 'border', 'border-green-200', 'dark:border-green-800/50', 'p-3', 'rounded-md');
+                messageIcon.classList.remove('fas', 'fa-exclamation-circle', 'text-red-500');
+                messageIcon.classList.add('fas', 'fa-check-circle', 'text-green-500');
+            } else {
+                messageContent.classList.remove('bg-green-100', 'text-green-700', 'dark:bg-green-900/30', 'dark:text-green-400', 'border-green-200', 'dark:border-green-800/50');
+                messageContent.classList.add('bg-red-100', 'text-red-700', 'dark:bg-red-900/30', 'dark:text-red-400', 'border', 'border-red-200', 'dark:border-red-800/50', 'p-3', 'rounded-md');
+                messageIcon.classList.remove('fas', 'fa-check-circle', 'text-green-500');
+                messageIcon.classList.add('fas', 'fa-exclamation-circle', 'text-red-500');
+            }
+            
+            messageText.textContent = text;
+            messageElement.classList.remove('hidden');
+        };
+        
+        const hideMessage = (messageElement) => {
+            messageElement.classList.add('hidden');
+        };
+        
+        const showValidationError = (input, message) => {
+            const errorElement = input.parentElement.querySelector('.error-message');
+            errorElement.textContent = message;
+            errorElement.classList.remove('hidden');
+            input.classList.add('border-red-500', 'dark:border-red-500');
+            input.classList.remove('border-gray-300', 'dark:border-gray-600');
+        };
+        
+        const hideValidationError = (input) => {
+            const errorElement = input.parentElement.querySelector('.error-message');
+            errorElement.classList.add('hidden');
+            input.classList.remove('border-red-500', 'dark:border-red-500');
+            input.classList.add('border-gray-300', 'dark:border-gray-600');
+        };
+        
+        // Show/hide modal
+        const showModal = (modal) => {
+            modal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        };
+        
+        const hideModal = (modal) => {
+            modal.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        };
+        
+        // Show dashboard for a specific user role
+        const showDashboard = (user) => {
+            const dashboardTitle = document.getElementById('dashboard-title');
+            const dashboardContent = document.getElementById('dashboard-content');
+            
+            // Set dashboard title based on user role
+            let roleTitle = '';
+            switch(user.role) {
+                case 'estudiante':
+                    roleTitle = 'Dashboard del Estudiante';
+                    break;
+                case 'profesor':
+                    roleTitle = 'Dashboard del Profesor';
+                    break;
+                case 'admin':
+                    roleTitle = 'Dashboard del Administrador';
+                    break;
+                default:
+                    roleTitle = 'Dashboard';
+            }
+            
+            dashboardTitle.textContent = roleTitle;
+            
+            // Set dashboard content based on user role
+            dashboardContent.innerHTML = dashboardTemplates[user.role];
+            
+            // Set user name in the dashboard
+            const userNameElement = dashboardContent.querySelector('#user-name');
+            if (userNameElement) {
+                userNameElement.textContent = user.name;
+            }
+            
+            // Show the dashboard modal
+            showModal(elements.modals.dashboard);
+        };
+        
+        // Form validation
+        const validateEmail = (email) => {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        };
+        
+        // Form submission handlers
+        elements.forms.login.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const email = elements.inputs.email.value.trim();
+            const password = elements.inputs.password.value;
+            
+            // Reset validation errors
+            hideValidationError(elements.inputs.email);
+            hideValidationError(elements.inputs.password);
+            
+            // Validate email format
+            if (!validateEmail(email)) {
+                showValidationError(elements.inputs.email, 'Por favor, ingresa un correo electrónico válido');
+                return;
+            }
+            
+            // Validate credentials
+            const user = users.find(u => u.email === email && u.password === password);
+            
+            if (user) {
+                // Show loading state
+                const loginButton = elements.buttons.login;
+                const originalButtonText = loginButton.innerHTML;
+                loginButton.innerHTML = `
+                    <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Iniciando sesión...</span>
+                `;
+                loginButton.disabled = true;
+                
+                // Simulate API request
+                setTimeout(() => {
+                    // Reset button
+                    loginButton.innerHTML = originalButtonText;
+                    loginButton.disabled = false;
+                    
+                    // Show success message
+                    showMessage(elements.messages.login, 'success', `Bienvenido, ${user.name}. Redirigiendo al dashboard...`);
+                    
+                    // Show dashboard
+                    setTimeout(() => {
+                        showDashboard(user);
+                    }, 1000);
+                }, 1500);
+            } else {
+                // Show error message
+                showMessage(elements.messages.login, 'error', 'Correo electrónico o contraseña incorrectos');
+            }
+        });
+        
+        elements.forms.forgotPassword.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('forgot-password-email').value.trim();
+            
+            // Reset validation errors
+            hideValidationError(document.getElementById('forgot-password-email'));
+            
+            // Validate email
+            if (!validateEmail(email)) {
+                showValidationError(document.getElementById('forgot-password-email'), 'Por favor, ingresa un correo electrónico válido');
+                return;
+            }
+            
+            // Check if email exists
+            const userExists = users.some(u => u.email === email);
+            
+            if (userExists) {
+                // Show success message
+                showMessage(elements.messages.forgotPassword, 'success', 'Se han enviado instrucciones a tu correo electrónico para restablecer tu contraseña.');
+                
+                // Close modal after a delay
+                setTimeout(() => {
+                    hideModal(elements.modals.forgotPassword);
+                    elements.forms.forgotPassword.reset();
+                }, 2000);
+            } else {
+                // Show error message
+                showMessage(elements.messages.forgotPassword, 'error', 'No se encontró ninguna cuenta con ese correo electrónico.');
+            }
+        });
+        
+        // Input validation on blur
+        elements.inputs.email.addEventListener('blur', (e) => {
+            if (e.target.value && !validateEmail(e.target.value)) {
+                showValidationError(e.target, 'Por favor, ingresa un correo electrónico válido');
+            } else if (e.target.value) {
+                hideValidationError(e.target);
+            }
+        });
+        
+        // Clear validation errors on input
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', () => {
+                hideValidationError(input);
+            });
+        });
+        
+        // Toggle password visibility
+        document.querySelectorAll('.password-toggle').forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                const input = toggle.parentElement.querySelector('input');
+                const icon = toggle.querySelector('i');
+                
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    input.type = 'password';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            });
+        });
+        
+        // Forgot password modal
+        elements.buttons.forgotPasswordLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            showModal(elements.modals.forgotPassword);
+        });
+        
+        elements.buttons.closeForgotPassword.addEventListener('click', () => {
+            hideModal(elements.modals.forgotPassword);
+        });
+        
+        // Dashboard modal close
+        elements.buttons.closeDashboard.addEventListener('click', () => {
+            hideModal(elements.modals.dashboard);
+        });
+        
+        // Close modals when clicking outside
+        elements.modals.forgotPassword.addEventListener('click', (e) => {
+            if (e.target === elements.modals.forgotPassword) {
+                hideModal(elements.modals.forgotPassword);
+            }
+        });
+        
+        elements.modals.dashboard.addEventListener('click', (e) => {
+            if (e.target === elements.modals.dashboard) {
+                hideModal(elements.modals.dashboard);
+            }
+        });
+        
+        // Dark mode toggle
+        const themeToggle = document.getElementById('theme-toggle');
+        
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+        
+        themeToggle.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="es" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sistema de login seguro y moderno para la plataforma educativa EduGrade">
+    <title>Iniciar Sesión - EduGrade</title>
+    
+    <!-- Bootstrap CSS from replit theme -->
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-50: #f5f3ff;
+            --primary-100: #ede9fe;
+            --primary-200: #ddd6fe;
+            --primary-300: #c4b5fd;
+            --primary-400: #a78bfa;
+            --primary-500: #8b5cf6;
+            --primary-600: #7c3aed;
+            --primary-700: #6d28d9;
+            --primary-800: #5b21b6;
+            --primary-900: #4c1d95;
+        }
+        
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            0% { transform: translateY(20px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+        
+        .animate-slide-up {
+            animation: slideUp 0.6s ease-out;
+        }
+        
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--primary-500), var(--bs-indigo));
+        }
+        
+        .login-container {
+            max-width: 28rem;
+            width: 100%;
+            background-color: var(--bs-body-bg);
+            border-radius: 1rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.5rem;
+            background-color: var(--bs-body-bg);
+            color: var(--primary-600);
+            border-radius: 9999px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s;
+            z-index: 10;
+            border: none;
+        }
+        
+        .theme-toggle:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .theme-toggle:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.5);
+        }
+        
+        .login-header {
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .login-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 4rem;
+            width: 4rem;
+            background-color: rgba(124, 58, 237, 0.1);
+            color: var(--primary-600);
+            border-radius: 9999px;
+            margin-bottom: 1rem;
+        }
+        
+        .login-form {
+            padding: 2rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+            position: relative;
+        }
+        
+        .form-control {
+            padding-left: 2.5rem;
+        }
+        
+        .form-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--bs-gray-500);
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--bs-gray-500);
+            cursor: pointer;
+        }
+        
+        .password-toggle:hover {
+            color: var(--bs-gray-700);
+        }
+        
+        .credential-help {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background-color: rgba(59, 130, 246, 0.1);
+            border-radius: 0.5rem;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <!-- Theme toggle button -->
+    <button id="theme-toggle" class="theme-toggle" aria-label="Cambiar tema">
+        <i class="fas fa-moon"></i>
+    </button>
+
+    <!-- Login Container -->
+    <div class="login-container animate-fade-in">
+        <!-- Header with logo -->
+        <div class="login-header">
+            <div class="login-icon animate-float">
+                <i class="fas fa-graduation-cap fa-2x"></i>
+            </div>
+            <h1 class="h3 mb-1 fw-bold">EduGrade</h1>
+            <p class="text-muted">Sistema de Gestión Académica</p>
+        </div>
+        
+        <!-- Login Panel -->
+        <div class="login-form animate-slide-up">
+            <h2 class="h5 mb-4 fw-semibold">Bienvenido de nuevo</h2>
+            
+            <!-- Alert for messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} mb-4" role="alert">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <form method="POST" action="{{ url_for('auth.login') }}">
+                {{ form.hidden_tag() }}
+                
+                <!-- Username Field -->
+                <div class="form-group mb-3">
+                    <label for="{{ form.username.id }}" class="form-label">Nombre de usuario</label>
+                    <div class="position-relative">
+                        <i class="fas fa-user form-icon"></i>
+                        {{ form.username(class_="form-control", placeholder="Ingresa tu nombre de usuario", required=True, autocomplete="username") }}
+                        {% if form.username.errors %}
+                            <div class="text-danger mt-1 small">{{ form.username.errors[0] }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Password Field -->
+                <div class="form-group mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <label for="{{ form.password.id }}" class="form-label">Contraseña</label>
+                    </div>
+                    <div class="position-relative">
+                        <i class="fas fa-lock form-icon"></i>
+                        {{ form.password(class_="form-control", placeholder="Ingresa tu contraseña", required=True) }}
+                        <button type="button" class="password-toggle" aria-label="Mostrar contraseña">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        {% if form.password.errors %}
+                            <div class="text-danger mt-1 small">{{ form.password.errors[0] }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Remember Me -->
+                <div class="form-check mb-3">
+                    {{ form.remember_me(class_="form-check-input") }}
+                    <label class="form-check-label" for="{{ form.remember_me.id }}">Recordar sesión</label>
+                </div>
+                
+                <!-- Login Button -->
+                {{ form.submit(class_="btn btn-primary w-100", value="Iniciar Sesión") }}
+            </form>
+
+            <!-- Credentials Help -->
+            <div class="credential-help mt-4">
+                <h3 class="h6 fw-semibold mb-2 text-primary">Credenciales de demostración:</h3>
+                <ul class="list-unstyled small text-primary-emphasis mb-0">
+                    <li><strong>Estudiante:</strong> estudiante@edugrade.com / estudiante123</li>
+                    <li><strong>Profesor:</strong> profesor@edugrade.com / profesor123</li>
+                    <li><strong>Administrador:</strong> admin@edugrade.com / admin123</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Theme toggle functionality
+            const themeToggle = document.getElementById('theme-toggle');
+            const html = document.documentElement;
+            
+            themeToggle.addEventListener('click', function() {
+                if (html.classList.contains('light')) {
+                    html.classList.remove('light');
+                    html.classList.add('dark');
+                    themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+                } else {
+                    html.classList.remove('dark');
+                    html.classList.add('light');
+                    themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+                }
+            });
+            
+            // Password visibility toggle
+            const passwordToggles = document.querySelectorAll('.password-toggle');
+            
+            passwordToggles.forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    const passwordField = this.previousElementSibling;
+                    const icon = this.querySelector('i');
+                    
+                    if (passwordField.type === 'password') {
+                        passwordField.type = 'text';
+                        icon.classList.remove('fa-eye');
+                        icon.classList.add('fa-eye-slash');
+                    } else {
+                        passwordField.type = 'password';
+                        icon.classList.remove('fa-eye-slash');
+                        icon.classList.add('fa-eye');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="es" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reportes - EduBacic</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE',
+                        secondary: '#2c3e50'
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- PDF Generation Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-200 flex flex-col min-h-screen">
+    <!-- Notification container -->
+    <div id="notification" class="fixed top-4 right-4 max-w-sm p-4 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 z-50"></div>
+
+    <!-- Loading overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-white dark:bg-gray-900 bg-opacity-80 dark:bg-opacity-80 flex items-center justify-center z-40 hidden">
+        <div class="text-center">
+            <div class="inline-block w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p class="text-lg text-primary font-medium" id="loadingMessage">Cargando datos...</p>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-secondary dark:bg-gray-800 text-white shadow-md">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold">EduBacic</h1>
+                </div>
+
+                <nav class="flex flex-wrap items-center gap-4">
+                    <a href="http://127.0.0.1:5501/templates/dashboard.html#" class="py-2 px-3 hover:bg-secondary-light dark:hover:bg-gray-700 rounded-lg transition-colors">
+                        <i class="fas fa-home mr-2"></i>Inicio
+                    </a>
+                   
+                    
+                    <button id="darkModeToggle" class="p-2 rounded-full hover:bg-gray-700 transition-colors ml-2" aria-label="Cambiar entre modo claro y oscuro">
+                        <i class="fas fa-moon dark:hidden"></i>
+                        <i class="fas fa-sun hidden dark:block"></i>
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main content -->
+    <main class="flex-grow container mx-auto px-4 py-8">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 md:p-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+                <h2 class="text-2xl font-bold text-secondary dark:text-white">Reportes de Actividades</h2>
+                
+                <div class="flex flex-wrap gap-2">
+                    <div class="dropdown relative">
+                        <button id="exportDropdownBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center">
+                            <i class="fas fa-file-export mr-2"></i> Exportar <i class="fas fa-chevron-down ml-2 text-xs"></i>
+                        </button>
+                        <div id="exportDropdown" class="dropdown-menu hidden absolute right-0 mt-2 bg-white dark:bg-gray-700 shadow-lg rounded-lg z-10 w-40 py-1">
+                            <button id="exportPdfBtn" class="w-full text-left px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors flex items-center">
+                                <i class="fas fa-file-pdf text-red-600 mr-2"></i> Exportar PDF
+                            </button>
+                            <button id="exportCsvBtn" class="w-full text-left px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors flex items-center">
+                                <i class="fas fa-file-csv text-green-600 mr-2"></i> Exportar CSV
+                            </button>
+                        </div>
+                    </div>
+                    <button id="refreshBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center">
+                        <i class="fas fa-sync-alt mr-2"></i> Actualizar
+                    </button>
+                    <select id="reportType" class="p-2 bg-gray-100 dark:bg-gray-700 border-0 rounded-lg focus:ring-2 focus:ring-primary" aria-label="Tipo de reporte">
+                        <option value="activity">Actividades</option>
+                        <option value="users">Usuarios</option>
+                        <option value="resources">Recursos</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Dashboard cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6" id="dashboard-cards">
+                <div class="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-xl shadow-sm transition-all duration-300 hover:shadow-md transform hover:-translate-y-1">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium">Total Actividades</p>
+                            <h3 class="text-3xl font-bold mt-2 text-secondary dark:text-white" id="totalActivities">42</h3>
+                        </div>
+                        <div class="bg-blue-100 dark:bg-blue-800/50 p-3 rounded-lg">
+                            <i class="fas fa-clipboard-list text-blue-600 dark:text-blue-400 text-xl"></i>
+                        </div>
+                    </div>
+                    <p class="text-gray-500 dark:text-gray-400 mt-4 text-sm"><i class="fas fa-arrow-up text-green-500 mr-1"></i> 12% este mes</p>
+                </div>
+
+                <div class="bg-green-50 dark:bg-green-900/20 p-6 rounded-xl shadow-sm transition-all duration-300 hover:shadow-md transform hover:-translate-y-1">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-green-600 dark:text-green-400 text-sm font-medium">Usuarios Activos</p>
+                            <h3 class="text-3xl font-bold mt-2 text-secondary dark:text-white" id="activeUsers">18</h3>
+                        </div>
+                        <div class="bg-green-100 dark:bg-green-800/50 p-3 rounded-lg">
+                            <i class="fas fa-users text-green-600 dark:text-green-400 text-xl"></i>
+                        </div>
+                    </div>
+                    <p class="text-gray-500 dark:text-gray-400 mt-4 text-sm"><i class="fas fa-arrow-up text-green-500 mr-1"></i> 8% este mes</p>
+                </div>
+
+                <div class="bg-purple-50 dark:bg-purple-900/20 p-6 rounded-xl shadow-sm transition-all duration-300 hover:shadow-md transform hover:-translate-y-1">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-purple-600 dark:text-purple-400 text-sm font-medium">Recursos Utilizados</p>
+                            <h3 class="text-3xl font-bold mt-2 text-secondary dark:text-white" id="resourcesUsed">85</h3>
+                        </div>
+                        <div class="bg-purple-100 dark:bg-purple-800/50 p-3 rounded-lg">
+                            <i class="fas fa-book text-purple-600 dark:text-purple-400 text-xl"></i>
+                        </div>
+                    </div>
+                    <p class="text-gray-500 dark:text-gray-400 mt-4 text-sm"><i class="fas fa-arrow-down text-red-500 mr-1"></i> 3% este mes</p>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6" id="charts-container">
+                <!-- Activity Chart -->
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm">
+                    <h3 class="text-base font-semibold mb-3 text-secondary dark:text-white">Actividades por Mes</h3>
+                    <div class="h-64 md:h-80">
+                        <canvas id="activityChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Distribution Pie Chart -->
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm">
+                    <h3 class="text-base font-semibold mb-3 text-secondary dark:text-white">Distribución por Tipo</h3>
+                    <div class="h-64 md:h-80">
+                        <canvas id="distributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter and search -->
+            <div class="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl mb-6">
+                <h3 class="text-lg font-semibold mb-3 text-secondary dark:text-white">Filtros</h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <i class="fas fa-search text-gray-400"></i>
+                        </div>
+                        <input type="text" id="searchInput" class="w-full p-3 pl-10 text-base bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary" placeholder="Buscar actividades...">
+                    </div>
+                    <div>
+                        <label for="dateFrom" class="block mb-1 text-sm text-gray-600 dark:text-gray-400">Desde</label>
+                        <input type="date" id="dateFrom" class="w-full p-3 text-base bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary">
+                    </div>
+                    <div>
+                        <label for="dateTo" class="block mb-1 text-sm text-gray-600 dark:text-gray-400">Hasta</label>
+                        <input type="date" id="dateTo" class="w-full p-3 text-base bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary">
+                    </div>
+                    <div>
+                        <label for="actionFilter" class="block mb-1 text-sm text-gray-600 dark:text-gray-400">Tipo de Acción</label>
+                        <select id="actionFilter" class="w-full p-3 text-base bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary">
+                            <option value="">Todas las acciones</option>
+                            <option value="Registrado">Registrado</option>
+                            <option value="Editado">Editado</option>
+                            <option value="Eliminado">Eliminado</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-4 flex justify-end">
+                    <button id="resetFilters" class="bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-800 dark:text-white px-4 py-2 rounded-lg transition-colors flex items-center">
+                        <i class="fas fa-undo mr-2"></i> Reiniciar Filtros
+                    </button>
+                </div>
+            </div>
+
+            <!-- Activity Report table -->
+            <div class="overflow-x-auto rounded-lg mb-6 border border-gray-200 dark:border-gray-700">
+                <table id="activities-table" class="w-full">
+                    <thead class="bg-secondary dark:bg-gray-700 text-white">
+                        <tr>
+                            <th class="p-3 text-left rounded-tl-lg">ID Usuario</th>
+                            <th class="p-3 text-left cursor-pointer" onclick="sortTable('name')">
+                                Nombre <i class="fas fa-sort ml-1 text-opacity-50" id="sort-name-icon"></i>
+                            </th>
+                            <th class="p-3 text-left cursor-pointer" onclick="sortTable('action')">
+                                Acción <i class="fas fa-sort ml-1 text-opacity-50" id="sort-action-icon"></i>
+                            </th>
+                            <th class="p-3 text-left cursor-pointer rounded-tr-lg" onclick="sortTable('date')">
+                                Fecha <i class="fas fa-sort-down ml-1 text-opacity-80" id="sort-date-icon"></i>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                        <!-- Activities rows will be inserted here -->
+                        <tr class="animate-pulse-slow">
+                            <td colspan="4" class="p-4 text-center text-gray-500 dark:text-gray-400">
+                                Cargando datos...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="text-sm text-gray-500 dark:text-gray-400 order-2 md:order-1">
+                    <span id="activityCount">0</span> actividades encontradas
+                </div>
+                
+                <div class="flex items-center space-x-2 order-1 md:order-2">
+                    <button id="prevPage" class="p-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <span id="currentPage" class="text-sm">Página 1 de 1</span>
+                    <button id="nextPage" class="p-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-secondary dark:bg-gray-800 text-white py-4 mt-8">
+        <div class="container mx-auto px-4 text-center">
+            <p>© 2025 EduBacic. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- PDF Preview Modal -->
+    <div id="pdfModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-4xl mx-4 max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-secondary dark:text-white flex items-center">
+                    <i class="fas fa-file-pdf text-red-600 mr-2"></i>
+                    Vista previa del PDF
+                </h2>
+                <button id="closePdfModalBtn" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" aria-label="Cerrar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="bg-gray-100 dark:bg-gray-700 p-2 rounded-lg mb-4">
+                <div class="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                    <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                    <p>Para guardar el PDF, haz clic derecho en la vista previa y selecciona "Guardar como..." o utiliza el botón de abajo.</p>
+                </div>
+            </div>
+            
+            <div class="flex-grow overflow-auto bg-white rounded-lg shadow-inner" id="pdfPreviewContainer">
+                <!-- PDF will be embedded here -->
+            </div>
+            
+            <div class="mt-4 flex justify-end space-x-3">
+                <button id="downloadPdfBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center">
+                    <i class="fas fa-download mr-2"></i> Guardar PDF
+                </button>
+                <button id="closePdfBtn" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // jsPDF namespace
+        const { jsPDF } = window.jspdf;
+        let pdfDataUrl = null;
+
+        // Dark mode detection and toggle
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        document.getElementById('darkModeToggle').addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            updateCharts(); // Redraw charts with new theme
+        });
+
+        // Loading state management
+        function showLoading(message = 'Cargando datos...') {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const loadingMessage = document.getElementById('loadingMessage');
+            loadingMessage.textContent = message;
+            loadingOverlay.classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            loadingOverlay.classList.add('hidden');
+        }
+
+        // In-memory activity data
+        let activities = [];
+        let currentPage = 1;
+        const itemsPerPage = 10;
+        let sortConfig = { field: 'date', ascending: false };
+        let filteredActivities = [];
+
+        // Display notification message
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            
+            notification.className = 'fixed top-4 right-4 max-w-sm p-4 rounded-lg shadow-lg transform transition-transform duration-300 z-50';
+            
+            if (type === 'success') {
+                notification.classList.add('bg-green-500', 'text-white');
+            } else if (type === 'error') {
+                notification.classList.add('bg-red-500', 'text-white');
+            } else if (type === 'warning') {
+                notification.classList.add('bg-yellow-500', 'text-white');
+            } else if (type === 'info') {
+                notification.classList.add('bg-blue-500', 'text-white');
+            }
+            
+            notification.textContent = message;
+            notification.classList.remove('translate-x-full');
+            
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+            }, 3000);
+        }
+
+        // Charts initialization
+        let activityChart, distributionChart;
+        
+        function initCharts() {
+            const activityCtx = document.getElementById('activityChart').getContext('2d');
+            const distributionCtx = document.getElementById('distributionChart').getContext('2d');
+            const isDarkMode = document.documentElement.classList.contains('dark');
+            
+            const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago'];
+            const activityData = [18, 22, 30, 25, 32, 28, 36, 42];
+            
+            // Activity Chart (Line)
+            activityChart = new Chart(activityCtx, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: 'Actividades',
+                        data: activityData,
+                        backgroundColor: 'rgba(93, 92, 222, 0.2)',
+                        borderColor: 'rgba(93, 92, 222, 1)',
+                        borderWidth: 1.5,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+                            titleColor: isDarkMode ? '#ffffff' : '#000000',
+                            bodyColor: isDarkMode ? '#ffffff' : '#000000',
+                            borderColor: isDarkMode ? 'rgba(200, 200, 200, 0.2)' : 'rgba(0, 0, 0, 0.1)',
+                            borderWidth: 1,
+                            padding: 8,
+                            displayColors: false,
+                            titleFont: {
+                                size: 11
+                            },
+                            bodyFont: {
+                                size: 11
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: isDarkMode ? '#e2e8f0' : '#4b5563',
+                                font: {
+                                    size: 10
+                                },
+                                maxTicksLimit: 6
+                            },
+                            border: {
+                                display: false
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false,
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: isDarkMode ? '#e2e8f0' : '#4b5563',
+                                font: {
+                                    size: 10
+                                }
+                            },
+                            border: {
+                                display: false
+                            }
+                        }
+                    },
+                    layout: {
+                        padding: {
+                            left: 5,
+                            right: 5,
+                            top: 5,
+                            bottom: 5
+                        }
+                    }
+                }
+            });
+            
+            // Distribution Chart (Pie)
+            distributionChart = new Chart(distributionCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Registrado', 'Editado', 'Eliminado'],
+                    datasets: [{
+                        data: [65, 25, 10],
+                        backgroundColor: [
+                            'rgba(72, 187, 120, 0.7)',
+                            'rgba(66, 153, 225, 0.7)',
+                            'rgba(237, 100, 166, 0.7)'
+                        ],
+                        borderColor: isDarkMode ? 'rgba(30, 30, 30, 0.8)' : 'white',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                color: isDarkMode ? '#e2e8f0' : '#4b5563',
+                                padding: 10,
+                                usePointStyle: true,
+                                pointStyle: 'circle',
+                                font: {
+                                    size: 10
+                                },
+                                boxWidth: 10
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+                            titleColor: isDarkMode ? '#ffffff' : '#000000',
+                            bodyColor: isDarkMode ? '#ffffff' : '#000000',
+                            borderColor: isDarkMode ? 'rgba(200, 200, 200, 0.2)' : 'rgba(0, 0, 0, 0.1)',
+                            borderWidth: 1,
+                            padding: 8,
+                            titleFont: {
+                                size: 11
+                            },
+                            bodyFont: {
+                                size: 11
+                            }
+                        }
+                    },
+                    cutout: '60%',
+                    layout: {
+                        padding: {
+                            left: 5,
+                            right: 20,
+                            top: 5,
+                            bottom: 5
+                        }
+                    }
+                }
+            });
+        }
+        
+        function updateCharts() {
+            if (activityChart) {
+                activityChart.destroy();
+            }
+            if (distributionChart) {
+                distributionChart.destroy();
+            }
+            initCharts();
+            
+            if (filteredActivities.length > 0) {
+                updateDistributionChart();
+            }
+        }
+        
+        function updateDistributionChart() {
+            const actionCounts = {
+                'Registrado': 0,
+                'Editado': 0,
+                'Eliminado': 0
+            };
+            
+            filteredActivities.forEach(activity => {
+                if (actionCounts.hasOwnProperty(activity.action)) {
+                    actionCounts[activity.action]++;
+                }
+            });
+            
+            distributionChart.data.datasets[0].data = [
+                actionCounts['Registrado'],
+                actionCounts['Editado'],
+                actionCounts['Eliminado']
+            ];
+            
+            distributionChart.update();
+        }
+
+        // Update sort icons
+        function updateSortIcons(field) {
+            const icons = {
+                'name': document.getElementById('sort-name-icon'),
+                'action': document.getElementById('sort-action-icon'),
+                'date': document.getElementById('sort-date-icon')
+            };
+            
+            for (const key in icons) {
+                icons[key].className = 'fas fa-sort ml-1 text-opacity-50';
+            }
+            
+            if (sortConfig.field === field) {
+                icons[field].className = sortConfig.ascending ? 
+                    'fas fa-sort-up ml-1 text-opacity-80' : 
+                    'fas fa-sort-down ml-1 text-opacity-80';
+            }
+        }
+
+        // Sort table
+        function sortTable(field) {
+            if (sortConfig.field === field) {
+                sortConfig.ascending = !sortConfig.ascending;
+            } else {
+                sortConfig.field = field;
+                sortConfig.ascending = true;
+            }
+            
+            updateSortIcons(field);
+            filterActivities();
+        }
+
+        // Filter activities
+        function filterActivities() {
+            const searchInput = document.getElementById('searchInput').value.toLowerCase();
+            const dateFrom = document.getElementById('dateFrom').value;
+            const dateTo = document.getElementById('dateTo').value;
+            const actionFilter = document.getElementById('actionFilter').value;
+            
+            filteredActivities = activities.filter(activity => {
+                const matchesSearch = 
+                    activity.name.toLowerCase().includes(searchInput) ||
+                    activity.action.toLowerCase().includes(searchInput) ||
+                    activity.userId.toString().includes(searchInput);
+                
+                let matchesDateRange = true;
+                
+                if (dateFrom) {
+                    matchesDateRange = matchesDateRange && activity.date >= dateFrom;
+                }
+                
+                if (dateTo) {
+                    matchesDateRange = matchesDateRange && activity.date <= dateTo;
+                }
+                
+                const matchesAction = !actionFilter || activity.action === actionFilter;
+                
+                return matchesSearch && matchesDateRange && matchesAction;
+            });
+            
+            filteredActivities.sort((a, b) => {
+                let valueA = a[sortConfig.field];
+                let valueB = b[sortConfig.field];
+                
+                if (typeof valueA === 'string') {
+                    valueA = valueA.toLowerCase();
+                    valueB = valueB.toLowerCase();
+                }
+                
+                if (valueA < valueB) return sortConfig.ascending ? -1 : 1;
+                if (valueA > valueB) return sortConfig.ascending ? 1 : -1;
+                return 0;
+            });
+            
+            currentPage = 1;
+            
+            renderActivitiesTable();
+            updatePagination();
+            updateDistributionChart();
+            
+            document.getElementById('totalActivities').textContent = activities.length;
+            
+            const uniqueUsers = new Set();
+            filteredActivities.forEach(activity => uniqueUsers.add(activity.userId));
+            document.getElementById('activeUsers').textContent = uniqueUsers.size;
+            
+            document.getElementById('resourcesUsed').textContent = Math.round(filteredActivities.length * 1.8);
+        }
+
+        // Reset filters
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('dateFrom').value = '';
+            document.getElementById('dateTo').value = '';
+            document.getElementById('actionFilter').value = '';
+            
+            filterActivities();
+            showNotification('Filtros reiniciados', 'info');
+        }
+
+        // Export to CSV
+        function exportToCSV() {
+            if (filteredActivities.length === 0) {
+                showNotification('No hay datos para exportar', 'warning');
+                return;
+            }
+            
+            showLoading('Generando CSV...');
+            
+            setTimeout(() => {
+                try {
+                    const headers = ['ID Usuario', 'Nombre', 'Acción', 'Fecha'];
+                    let csvContent = headers.join(',') + '\n';
+                    
+                    filteredActivities.forEach(activity => {
+                        const row = [
+                            activity.userId,
+                            `"${activity.name.replace(/"/g, '""')}"`,
+                            activity.action,
+                            activity.date
+                        ].join(',');
+                        csvContent += row + '\n';
+                    });
+                    
+                    hideLoading();
+                    
+                    showDataModal(csvContent);
+                    showNotification('Datos CSV generados. Usa Ctrl+C para copiarlos', 'success');
+                } catch (error) {
+                    hideLoading();
+                    showNotification('Error al generar CSV: ' + error.message, 'error');
+                }
+            }, 500);
+        }
+
+        // PDF Generation
+        async function generatePDF() {
+            if (filteredActivities.length === 0) {
+                showNotification('No hay datos para exportar', 'warning');
+                return;
+            }
+            
+            showLoading('Generando PDF...');
+            
+            try {
+                // Capture charts as images
+                const activityChartCanvas = document.getElementById('activityChart');
+                const activityChartImage = activityChartCanvas.toDataURL('image/png');
+                
+                const distributionChartCanvas = document.getElementById('distributionChart');
+                const distributionChartImage = distributionChartCanvas.toDataURL('image/png');
+                
+                // Create new PDF with A4 dimensions
+                const doc = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+                
+                // Add header
+                doc.setFillColor(44, 62, 80); // Secondary color
+                doc.rect(0, 0, 210, 25, 'F');
+                
+                doc.setTextColor(255, 255, 255);
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(20);
+                doc.text('EduBacic', 20, 15);
+                
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'normal');
+                doc.text('Reporte de Actividades', 105, 15, { align: 'center' });
+                
+                // Add timestamp
+                const now = new Date();
+                const formattedDate = now.toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                doc.setTextColor(102, 102, 102);
+                doc.setFontSize(10);
+                doc.text(`Generado el: ${formattedDate}`, 190, 15, { align: 'right' });
+                
+                // Add filter info if filters are applied
+                let yPosition = 30;
+                
+                const searchInput = document.getElementById('searchInput').value;
+                const dateFrom = document.getElementById('dateFrom').value;
+                const dateTo = document.getElementById('dateTo').value;
+                const actionFilter = document.getElementById('actionFilter').value;
+                
+                if (searchInput || dateFrom || dateTo || actionFilter) {
+                    doc.setFontSize(11);
+                    doc.setTextColor(93, 92, 222); // Primary color
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('Filtros aplicados:', 20, yPosition);
+                    yPosition += 6;
+                    
+                    doc.setFont('helvetica', 'normal');
+                    doc.setTextColor(80, 80, 80);
+                    doc.setFontSize(10);
+                    
+                    if (searchInput) {
+                        doc.text(`• Búsqueda: "${searchInput}"`, 25, yPosition);
+                        yPosition += 5;
+                    }
+                    
+                    if (dateFrom || dateTo) {
+                        let dateText = '• Rango de fechas: ';
+                        if (dateFrom) dateText += `desde ${dateFrom} `;
+                        if (dateTo) dateText += `hasta ${dateTo}`;
+                        doc.text(dateText, 25, yPosition);
+                        yPosition += 5;
+                    }
+                    
+                    if (actionFilter) {
+                        doc.text(`• Tipo de acción: ${actionFilter}`, 25, yPosition);
+                        yPosition += 5;
+                    }
+                    
+                    yPosition += 5;
+                } else {
+                    yPosition = 35;
+                }
+                
+                // Add summary statistics
+                doc.setFillColor(245, 245, 245);
+                doc.roundedRect(15, yPosition, 180, 20, 3, 3, 'F');
+                
+                doc.setTextColor(50, 50, 50);
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'bold');
+                doc.text('RESUMEN', 105, yPosition + 5, { align: 'center' });
+                
+                doc.setFont('helvetica', 'normal');
+                const totalActivities = document.getElementById('totalActivities').textContent;
+                const activeUsers = document.getElementById('activeUsers').textContent;
+                const resourcesUsed = document.getElementById('resourcesUsed').textContent;
+                
+                doc.text(`Total de Actividades: ${totalActivities}`, 30, yPosition + 13);
+                doc.text(`Usuarios Activos: ${activeUsers}`, 105, yPosition + 13);
+                doc.text(`Recursos Utilizados: ${resourcesUsed}`, 170, yPosition + 13);
+                
+                yPosition += 30;
+                
+                // Add charts
+                doc.setDrawColor(220, 220, 220);
+                doc.setFillColor(255, 255, 255);
+                
+                // Activity Chart
+                doc.setTextColor(80, 80, 80);
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Actividades por Mes', 20, yPosition);
+                
+                yPosition += 5;
+                doc.addImage(activityChartImage, 'PNG', 20, yPosition, 75, 50);
+                
+                // Distribution Chart
+                doc.text('Distribución por Tipo', 115, yPosition - 5);
+                doc.addImage(distributionChartImage, 'PNG', 115, yPosition, 75, 50);
+                
+                yPosition += 60;
+                
+                // Add table of activities
+                doc.setFontSize(12);
+                doc.setTextColor(80, 80, 80);
+                doc.text('Detalle de Actividades', 105, yPosition, { align: 'center' });
+                
+                yPosition += 5;
+                
+                // Table configuration
+                const tableColumn = ["ID Usuario", "Nombre", "Acción", "Fecha"];
+                const tableRows = [];
+                
+                // Convert all filtered activities to table rows
+                filteredActivities.forEach(activity => {
+                    const formattedDate = new Date(activity.date).toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                    });
+                    
+                    tableRows.push([
+                        activity.userId,
+                        activity.name,
+                        activity.action,
+                        formattedDate
+                    ]);
+                });
+                
+                // Generate the table
+                doc.autoTable({
+                    startY: yPosition,
+                    head: [tableColumn],
+                    body: tableRows,
+                    headStyles: {
+                        fillColor: [93, 92, 222],
+                        textColor: [255, 255, 255],
+                        fontStyle: 'bold',
+                        halign: 'left'
+                    },
+                    columnStyles: {
+                        0: { cellWidth: 25 },
+                        1: { cellWidth: 60 },
+                        2: { cellWidth: 40 },
+                        3: { cellWidth: 40 }
+                    },
+                    styles: {
+                        overflow: 'ellipsize',
+                        font: 'helvetica',
+                        fontSize: 9
+                    },
+                    didParseCell: function(data) {
+                        // Color the action cell based on the type
+                        if (data.section === 'body' && data.column.index === 2) {
+                            if (data.cell.raw === 'Registrado') {
+                                data.cell.styles.textColor = [46, 139, 87]; // Sea Green
+                            } else if (data.cell.raw === 'Editado') {
+                                data.cell.styles.textColor = [70, 130, 180]; // Steel Blue
+                            } else if (data.cell.raw === 'Eliminado') {
+                                data.cell.styles.textColor = [178, 34, 34]; // Fire Brick
+                            }
+                        }
+                    }
+                });
+                
+                // Add footer
+                const totalPages = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= totalPages; i++) {
+                    doc.setPage(i);
+                    
+                    // Footer
+                    doc.setFillColor(44, 62, 80); // Secondary color
+                    doc.rect(0, 287, 210, 10, 'F');
+                    
+                    // Page numbering
+                    doc.setTextColor(255, 255, 255);
+                    doc.setFontSize(8);
+                    doc.text(`Página ${i} de ${totalPages}`, 105, 293, { align: 'center' });
+                    doc.text('© 2025 EduBacic', 20, 293);
+                }
+                
+                // Save PDF as data URL
+                pdfDataUrl = doc.output('dataurlstring');
+                
+                // Hide loading and show PDF preview
+                hideLoading();
+                showPdfPreview(pdfDataUrl);
+                
+            } catch (error) {
+                hideLoading();
+                console.error('Error generating PDF:', error);
+                showNotification('Error al generar PDF: ' + error.message, 'error');
+            }
+        }
+        
+        // Show PDF preview
+        function showPdfPreview(dataUrl) {
+            const pdfModal = document.getElementById('pdfModal');
+            const pdfPreviewContainer = document.getElementById('pdfPreviewContainer');
+            
+            // Clear previous content
+            pdfPreviewContainer.innerHTML = '';
+            
+            // Create iframe to display PDF
+            const iframe = document.createElement('iframe');
+            iframe.src = dataUrl;
+            iframe.width = '100%';
+            iframe.height = '100%';
+            iframe.style.border = 'none';
+            iframe.className = 'rounded-lg';
+            
+            pdfPreviewContainer.appendChild(iframe);
+            
+            // Show modal
+            pdfModal.classList.remove('hidden');
+        }
+        
+        // Save PDF
+        function savePdf() {
+            if (pdfDataUrl) {
+                const link = document.createElement('a');
+                const fileName = `EduBacic_Reporte_${new Date().toISOString().split('T')[0]}.pdf`;
+                
+                link.href = pdfDataUrl;
+                link.download = fileName;
+                link.target = '_blank';
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showNotification('PDF preparado para descarga', 'success');
+            } else {
+                showNotification('No hay PDF para guardar', 'error');
+            }
+        }
+        
+        // Close PDF preview
+        function closePdfPreview() {
+            document.getElementById('pdfModal').classList.add('hidden');
+        }
+
+        function showDataModal(data) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            
+            modal.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-3xl mx-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-secondary dark:text-white">Datos CSV</h2>
+                        <button class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 close-modal" aria-label="Cerrar">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <p class="mb-4 text-gray-600 dark:text-gray-300">Copia los siguientes datos CSV:</p>
+                    <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg overflow-auto max-h-96">
+                        <pre class="text-sm">${data}</pre>
+                    </div>
+                    <div class="mt-4 flex justify-between">
+                        <button class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg transition-colors" id="copyBtn">
+                            <i class="fas fa-copy mr-2"></i> Copiar al portapapeles
+                        </button>
+                        <button class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors close-modal">
+                            Cerrar
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            document.querySelectorAll('.close-modal').forEach(button => {
+                button.addEventListener('click', () => {
+                    document.body.removeChild(modal);
+                });
+            });
+            
+            document.getElementById('copyBtn').addEventListener('click', () => {
+                try {
+                    navigator.clipboard.writeText(data).then(() => {
+                        showNotification('Datos copiados al portapapeles', 'success');
+                    }).catch(err => {
+                        showNotification('Error al copiar: ' + err.message, 'error');
+                    });
+                } catch (err) {
+                    showNotification('Esta función no está disponible en tu navegador', 'warning');
+                }
+            });
+        }
+
+        // Pagination
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredActivities.length / itemsPerPage);
+            const prevBtn = document.getElementById('prevPage');
+            const nextBtn = document.getElementById('nextPage');
+            const currentPageElement = document.getElementById('currentPage');
+            
+            currentPageElement.textContent = `Página ${currentPage} de ${totalPages || 1}`;
+            
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = currentPage === totalPages || totalPages === 0;
+        }
+
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderActivitiesTable();
+                updatePagination();
+            }
+        }
+
+        function nextPage() {
+            const totalPages = Math.ceil(filteredActivities.length / itemsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderActivitiesTable();
+                updatePagination();
+            }
+        }
+
+        // Render activities table
+        function renderActivitiesTable() {
+            const table = document.getElementById('activities-table').querySelector('tbody');
+            const activityCount = document.getElementById('activityCount');
+            
+            table.innerHTML = '';
+            
+            activityCount.textContent = filteredActivities.length;
+            
+            if (filteredActivities.length === 0) {
+                const noDataRow = document.createElement('tr');
+                noDataRow.className = 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700';
+                noDataRow.innerHTML = `
+                    <td colspan="4" class="p-6 text-center text-gray-500 dark:text-gray-400">
+                        <i class="fas fa-search fa-2x mb-3 opacity-30"></i>
+                        <p>No se encontraron actividades</p>
+                    </td>
+                `;
+                table.appendChild(noDataRow);
+                return;
+            }
+            
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const paginatedActivities = filteredActivities.slice(start, end);
+            
+            paginatedActivities.forEach((activity, index) => {
+                const newRow = document.createElement('tr');
+                newRow.className = 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors';
+                
+                newRow.style.opacity = '0';
+                newRow.style.transition = 'opacity 300ms ease';
+                
+                let actionBadgeClass = 'px-2 py-1 rounded-full text-xs font-medium';
+                
+                switch(activity.action) {
+                    case 'Registrado':
+                        actionBadgeClass += ' bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+                        break;
+                    case 'Editado':
+                        actionBadgeClass += ' bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
+                        break;
+                    case 'Eliminado':
+                        actionBadgeClass += ' bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+                        break;
+                    default:
+                        actionBadgeClass += ' bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+                }
+                
+                const formattedDate = new Date(activity.date).toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+                
+                newRow.innerHTML = `
+                    <td class="p-3 text-sm">${activity.userId}</td>
+                    <td class="p-3 font-medium">${activity.name}</td>
+                    <td class="p-3">
+                        <span class="${actionBadgeClass}">${activity.action}</span>
+                    </td>
+                    <td class="p-3">${formattedDate}</td>
+                `;
+                
+                table.appendChild(newRow);
+                
+                setTimeout(() => {
+                    newRow.style.opacity = '1';
+                }, index * 50);
+            });
+        }
+
+        // Simulated data refresh
+        function refreshData() {
+            showLoading('Actualizando datos...');
+            
+            setTimeout(() => {
+                const newActivities = generateRandomActivities(5);
+                activities = [...newActivities, ...activities];
+                
+                hideLoading();
+                filterActivities();
+                showNotification('Datos actualizados correctamente', 'success');
+            }, 1000);
+        }
+
+        // Generate random activities for demo purposes
+        function generateRandomActivities(count) {
+            const names = ['Sofía', 'Sebastián', 'Juan', 'María', 'Pedro', 'Ana', 'Jorge', 'Luisa', 'Roberto', 'Carla'];
+            const actions = ['Registrado', 'Editado', 'Eliminado'];
+            const newActivities = [];
+            
+            for (let i = 0; i < count; i++) {
+                const today = new Date();
+                const randomDaysAgo = Math.floor(Math.random() * 30);
+                const date = new Date();
+                date.setDate(today.getDate() - randomDaysAgo);
+                
+                newActivities.push({
+                    userId: Math.floor(Math.random() * 20) + 1,
+                    name: names[Math.floor(Math.random() * names.length)],
+                    action: actions[Math.floor(Math.random() * actions.length)],
+                    date: date.toISOString().split('T')[0]
+                });
+            }
+            
+            return newActivities;
+        }
+
+        // Change report type
+        function changeReportType() {
+            const reportType = document.getElementById('reportType').value;
+            showLoading(`Cargando reporte de ${reportType === 'activity' ? 'actividades' : reportType === 'users' ? 'usuarios' : 'recursos'}`);
+            
+            setTimeout(() => {
+                hideLoading();
+                showNotification(`Reporte de ${reportType === 'activity' ? 'actividades' : reportType === 'users' ? 'usuarios' : 'recursos'} cargado`, 'success');
+            }, 1000);
+        }
+
+        // Toggle dropdown
+        function toggleExportDropdown() {
+            document.getElementById('exportDropdown').classList.toggle('hidden');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('exportDropdown');
+            const dropdownBtn = document.getElementById('exportDropdownBtn');
+            
+            if (!dropdown.contains(event.target) && !dropdownBtn.contains(event.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        // Add event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            // Export dropdown
+            document.getElementById('exportDropdownBtn').addEventListener('click', toggleExportDropdown);
+            document.getElementById('exportCsvBtn').addEventListener('click', exportToCSV);
+            document.getElementById('exportPdfBtn').addEventListener('click', generatePDF);
+            
+            // PDF Modal buttons
+            document.getElementById('closePdfModalBtn').addEventListener('click', closePdfPreview);
+            document.getElementById('closePdfBtn').addEventListener('click', closePdfPreview);
+            document.getElementById('downloadPdfBtn').addEventListener('click', savePdf);
+            
+            document.getElementById('refreshBtn').addEventListener('click', refreshData);
+            document.getElementById('searchInput').addEventListener('input', filterActivities);
+            document.getElementById('dateFrom').addEventListener('change', filterActivities);
+            document.getElementById('dateTo').addEventListener('change', filterActivities);
+            document.getElementById('actionFilter').addEventListener('change', filterActivities);
+            document.getElementById('prevPage').addEventListener('click', prevPage);
+            document.getElementById('nextPage').addEventListener('click', nextPage);
+            document.getElementById('reportType').addEventListener('change', changeReportType);
+            document.getElementById('resetFilters').addEventListener('click', resetFilters);
+            
+            initCharts();
+            
+            showLoading('Cargando datos iniciales...');
+            
+            setTimeout(() => {
+                activities = [
+                    { userId: 1, name: 'Sofía', action: 'Registrado', date: '2025-03-01' },
+                    { userId: 2, name: 'Sebastián', action: 'Editado', date: '2025-03-02' },
+                    { userId: 3, name: 'Juan', action: 'Eliminado', date: '2025-03-03' },
+                    { userId: 4, name: 'María', action: 'Registrado', date: '2025-03-04' },
+                    { userId: 5, name: 'Pedro', action: 'Editado', date: '2025-03-05' },
+                    { userId: 6, name: 'Ana', action: 'Registrado', date: '2025-03-06' },
+                    { userId: 7, name: 'Jorge', action: 'Eliminado', date: '2025-03-07' },
+                    { userId: 8, name: 'Luisa', action: 'Editado', date: '2025-03-08' },
+                    { userId: 9, name: 'Roberto', action: 'Registrado', date: '2025-03-09' },
+                    { userId: 10, name: 'Carla', action: 'Eliminado', date: '2025-03-10' },
+                    { userId: 11, name: 'Diego', action: 'Registrado', date: '2025-03-11' },
+                    { userId: 12, name: 'Valentina', action: 'Editado', date: '2025-03-12' },
+                    { userId: 13, name: 'Alejandro', action: 'Eliminado', date: '2025-03-13' },
+                    { userId: 14, name: 'Gabriela', action: 'Registrado', date: '2025-03-14' },
+                    { userId: 15, name: 'Fernando', action: 'Editado', date: '2025-03-15' }
+                ];
+                
+                const additionalActivities = generateRandomActivities(10);
+                activities = [...activities, ...additionalActivities];
+                
+                updateSortIcons('date');
+                
+                hideLoading();
+                filterActivities();
+                showNotification('Datos cargados correctamente', 'success');
+            }, 1500);
+        });
+    </script>
+</body>
+</html>

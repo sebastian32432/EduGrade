@@ -1,0 +1,365 @@
+{% extends 'layout.html' %}
+
+{% block title %}Calificaciones - EduGrade{% endblock %}
+
+{% block head %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<!-- Navbar -->
+<nav class="bg-gradient-to-r from-primary-600 to-purple-500 dark:from-primary-900 dark:to-purple-900 text-white fixed w-full top-0 z-30 shadow-md transition-colors duration-300">
+    <div class="max-w-7xl mx-auto px-4">
+        <div class="flex items-center justify-between h-16">
+            <div class="flex items-center">
+                <button id="sidebar-toggle" class="mr-3 text-xl focus:outline-none md:hidden" aria-label="Toggle Menu">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="flex items-center">
+                    <i class="fas fa-graduation-cap mr-3 text-xl"></i>
+                    <h1 class="text-xl font-bold">EduGrade</h1>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <!-- Notifications -->
+                <div class="relative">
+                    <button id="notifications-btn" class="text-white focus:outline-none relative" aria-label="Notificaciones">
+                        <i class="fas fa-bell text-xl"></i>
+                        <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span>
+                    </button>
+                    
+                    <!-- Dropdown de notificaciones (oculto por defecto) -->
+                    <div id="notifications-dropdown" class="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 hidden animate-fade-in z-50">
+                        <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                            <h3 class="font-semibold">Notificaciones</h3>
+                        </div>
+                        <div class="max-h-96 overflow-y-auto">
+                            <a href="#" class="block p-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-700">
+                                <div class="flex">
+                                    <div class="flex-shrink-0 h-9 w-9 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 mr-3">
+                                        <i class="fas fa-file-alt"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium">Nueva entrega: Proyecto Final</p>
+                                        <p class="text-xs text-gray-600 dark:text-gray-400">Alumno: Carlos García - Hace 10 min</p>
+                                    </div>
+                                </div>
+                            </a>
+                            <a href="#" class="block p-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-700">
+                                <div class="flex">
+                                    <div class="flex-shrink-0 h-9 w-9 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center text-red-600 dark:text-red-400 mr-3">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium">Recordatorio: Cierre de calificaciones</p>
+                                        <p class="text-xs text-gray-600 dark:text-gray-400">Vence mañana a las 23:59</p>
+                                    </div>
+                                </div>
+                            </a>
+                            <a href="#" class="block p-3 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <div class="flex">
+                                    <div class="flex-shrink-0 h-9 w-9 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-600 dark:text-green-400 mr-3">
+                                        <i class="fas fa-calendar-alt"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium">Junta departamental</p>
+                                        <p class="text-xs text-gray-600 dark:text-gray-400">Jueves, 20 de Noviembre - 15:00</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="p-2 border-t border-gray-200 dark:border-gray-700">
+                            <a href="#" class="block text-center text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300">Ver todas las notificaciones</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Dark mode toggle -->
+                <button id="theme-toggle" class="text-white focus:outline-none" aria-label="Toggle Dark Mode">
+                    <i class="fas fa-moon text-xl dark:hidden"></i>
+                    <i class="fas fa-sun hidden text-xl dark:block"></i>
+                </button>
+
+                <!-- User menu -->
+                <div class="relative">
+                    <button id="user-menu-button" class="flex items-center text-sm text-white focus:outline-none" aria-expanded="false">
+                        <span class="mr-2 hidden sm:block">{{ current_user.get_full_name() }}</span>
+                        <div class="h-8 w-8 rounded-full bg-primary-400 dark:bg-primary-800 flex items-center justify-center">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                    </button>
+                    <div id="user-menu" class="hidden origin-top-right absolute right-0 mt-2 w-48 rounded-lg shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 py-1 focus:outline-none z-50 transition-all duration-200 transform opacity-0 scale-95" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
+                        <a href="{{ url_for('teacher.profile') }}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">
+                            <i class="fas fa-user-circle mr-2"></i> Perfil
+                        </a>
+                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">
+                            <i class="fas fa-cog mr-2"></i> Configuración
+                        </a>
+                        <a href="{{ url_for('auth.logout') }}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">
+                            <i class="fas fa-sign-out-alt mr-2"></i> Cerrar Sesión
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Overlay for mobile sidebar -->
+<div id="sidebar-overlay" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-40 hidden md:hidden transition-opacity duration-300"></div>
+
+<!-- Layout principal -->
+<div class="flex pt-16">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed left-0 transform -translate-x-full md:translate-x-0 h-full bg-white dark:bg-gray-800 shadow-lg transition-transform duration-300 ease-in-out z-40 w-64 overflow-y-auto">
+        <div class="p-6">
+            <!-- Teacher profile summary -->
+            <div class="flex items-center mb-6">
+                <div class="h-14 w-14 rounded-full bg-primary-100 dark:bg-primary-900/50 flex items-center justify-center text-primary-600 dark:text-primary-400 animate-pulse-slow">
+                    <i class="fas fa-user-tie text-xl"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="font-bold text-gray-800 dark:text-white">{{ current_user.get_full_name() }}</h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Profesor</p>
+                </div>
+            </div>
+
+            <nav class="space-y-6">
+                <!-- Gestión Académica -->
+                <div class="animate-fade-in" style="animation-delay: 0.1s">
+                    <h3 class="text-xs uppercase text-gray-500 dark:text-gray-400 font-semibold mb-3 flex items-center">
+                        <i class="fas fa-graduation-cap mr-2"></i> Gestión Académica
+                    </h3>
+                    <div class="space-y-1">
+                        <a href="{{ url_for('teacher.dashboard') }}" class="nav-link flex items-center py-2 px-3 text-gray-700 dark:text-gray-200 hover:bg-primary-50 dark:hover:bg-primary-900/30 rounded-lg font-medium transition-colors duration-200 group">
+                            <i class="fas fa-tachometer-alt mr-3 text-primary-500 dark:text-primary-400 group-hover:text-primary-600 dark:group-hover:text-primary-300 transition-colors duration-200"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="{{ url_for('teacher.courses') }}" class="nav-link flex items-center py-2 px-3 text-gray-700 dark:text-gray-200 hover:bg-primary-50 dark:hover:bg-primary-900/30 rounded-lg font-medium transition-colors duration-200 group">
+                            <i class="fas fa-chalkboard-teacher mr-3 text-primary-500 dark:text-primary-400 group-hover:text-primary-600 dark:group-hover:text-primary-300 transition-colors duration-200"></i>
+                            <span>Mis Cursos</span>
+                        </a>
+                        <a href="{{ url_for('teacher.grades') }}" class="nav-link active flex items-center py-2 px-3 text-gray-700 dark:text-gray-200 hover:bg-primary-50 dark:hover:bg-primary-900/30 rounded-lg font-medium transition-colors duration-200 group">
+                            <i class="fas fa-edit mr-3 text-primary-500 dark:text-primary-400 group-hover:text-primary-600 dark:group-hover:text-primary-300 transition-colors duration-200"></i>
+                            <span>Calificaciones</span>
+                        </a>
+                        <a href="{{ url_for('teacher.assignments') }}" class="nav-link flex items-center py-2 px-3 text-gray-700 dark:text-gray-200 hover:bg-primary-50 dark:hover:bg-primary-900/30 rounded-lg font-medium transition-colors duration-200 group">
+                            <i class="fas fa-tasks mr-3 text-primary-500 dark:text-primary-400 group-hover:text-primary-600 dark:group-hover:text-primary-300 transition-colors duration-200"></i>
+                            <span>Asignaciones</span>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Mi Cuenta -->
+                <div class="animate-fade-in" style="animation-delay: 0.2s">
+                    <h3 class="text-xs uppercase text-gray-500 dark:text-gray-400 font-semibold mb-3 flex items-center">
+                        <i class="fas fa-user mr-2"></i> Mi Cuenta
+                    </h3>
+                    <div class="space-y-1">
+                        <a href="{{ url_for('teacher.profile') }}" class="nav-link flex items-center py-2 px-3 text-gray-700 dark:text-gray-200 hover:bg-primary-50 dark:hover:bg-primary-900/30 rounded-lg font-medium transition-colors duration-200 group">
+                            <i class="fas fa-user-circle mr-3 text-primary-500 dark:text-primary-400 group-hover:text-primary-600 dark:group-hover:text-primary-300 transition-colors duration-200"></i>
+                            <span>Mi Perfil</span>
+                        </a>
+                        <a href="{{ url_for('auth.logout') }}" class="nav-link flex items-center py-2 px-3 text-gray-700 dark:text-gray-200 hover:bg-primary-50 dark:hover:bg-primary-900/30 rounded-lg font-medium transition-colors duration-200 group">
+                            <i class="fas fa-sign-out-alt mr-3 text-primary-500 dark:text-primary-400 group-hover:text-primary-600 dark:group-hover:text-primary-300 transition-colors duration-200"></i>
+                            <span>Cerrar Sesión</span>
+                        </a>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </aside>
+
+    <!-- Main content -->
+    <div class="flex-1 md:ml-64 p-8">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Gestión de Calificaciones</h1>
+                <p class="text-gray-600 dark:text-gray-400 mt-1">Administre las calificaciones de sus estudiantes</p>
+            </div>
+            
+            <!-- Course filter dropdown -->
+            <div class="flex flex-wrap gap-2">
+                <select id="course-filter" class="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400">
+                    <option value="">Todos los cursos</option>
+                    {% for course in courses %}
+                    <option value="{{ course.id }}" {% if course_filter and course_filter.id == course.id %}selected{% endif %}>{{ course.name }}</option>
+                    {% endfor %}
+                </select>
+                
+                <button id="apply-filter" class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
+                    <i class="fas fa-filter mr-2"></i> Filtrar
+                </button>
+            </div>
+        </div>
+        
+        <!-- Grades Table -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden animate-fade-in">
+            {% if students_with_grades %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Estudiante</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Curso</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Asignación</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Calificación</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Estado</th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        {% for student_data in students_with_grades %}
+                            {% set student = student_data.student %}
+                            {% set user = student_data.user %}
+                            
+                            {% for grade_data in student_data.grades %}
+                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 h-10 w-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400">
+                                                <i class="fas fa-user-graduate"></i>
+                                            </div>
+                                            <div class="ml-4">
+                                                <div class="text-sm font-medium text-gray-900 dark:text-white">{{ user.get_full_name() }}</div>
+                                                <div class="text-sm text-gray-500 dark:text-gray-400">{{ user.email }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900 dark:text-white">{{ grade_data.course.name }}</div>
+                                        <div class="text-xs text-gray-500 dark:text-gray-400">{{ grade_data.course.code }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900 dark:text-white">{{ grade_data.assignment.title }}</div>
+                                        <div class="text-xs text-gray-500 dark:text-gray-400">
+                                            Max: {{ grade_data.max_points }}
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        {% if grade_data.grade %}
+                                            <div class="text-sm font-medium 
+                                                {% if grade_data.grade.score >= 90 %}text-green-600 dark:text-green-400
+                                                {% elif grade_data.grade.score >= 80 %}text-blue-600 dark:text-blue-400
+                                                {% elif grade_data.grade.score >= 70 %}text-yellow-600 dark:text-yellow-400
+                                                {% elif grade_data.grade.score >= 60 %}text-orange-600 dark:text-orange-400
+                                                {% else %}text-red-600 dark:text-red-400{% endif %}">
+                                                {{ grade_data.grade.score }}
+                                            </div>
+                                        {% else %}
+                                            <span class="text-sm text-gray-500 dark:text-gray-400">Sin calificar</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        {% if grade_data.grade %}
+                                            <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400">
+                                                Calificado
+                                            </span>
+                                        {% else %}
+                                            <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400">
+                                                Pendiente
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <a href="{{ url_for('teacher.grade_assignment', assignment_id=grade_data.assignment.id, student_id=student.id) }}" class="text-primary-600 dark:text-primary-400 hover:text-primary-900 dark:hover:text-primary-300">
+                                            <i class="fas fa-edit mr-1"></i> {{ 'Editar' if grade_data.grade else 'Calificar' }}
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <!-- Empty state -->
+            <div class="p-8 text-center">
+                <div class="w-16 h-16 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-exclamation-triangle text-yellow-500 dark:text-yellow-400 text-2xl"></i>
+                </div>
+                {% if course_filter %}
+                <h3 class="text-lg font-medium text-gray-800 dark:text-white mb-2">No hay estudiantes en este curso</h3>
+                <p class="text-gray-600 dark:text-gray-400 mb-6">No se encontraron estudiantes matriculados en el curso seleccionado.</p>
+                {% else %}
+                <h3 class="text-lg font-medium text-gray-800 dark:text-white mb-2">No hay calificaciones para gestionar</h3>
+                <p class="text-gray-600 dark:text-gray-400 mb-6">Parece que aún no tienes estudiantes matriculados en tus cursos o no has creado asignaciones.</p>
+                {% endif %}
+                <div class="flex flex-wrap justify-center gap-3">
+                    <a href="{{ url_for('teacher.courses') }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                        <i class="fas fa-book mr-2"></i> Ver mis cursos
+                    </a>
+                    <a href="{{ url_for('teacher.assignments') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                        <i class="fas fa-tasks mr-2"></i> Gestionar asignaciones
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Toggle sidebar on mobile
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        
+        sidebar.classList.toggle('-translate-x-full');
+        overlay.classList.toggle('hidden');
+    }
+    
+    document.getElementById('sidebar-toggle').addEventListener('click', toggleSidebar);
+    document.getElementById('sidebar-overlay').addEventListener('click', toggleSidebar);
+    
+    // User menu toggle
+    document.getElementById('user-menu-button').addEventListener('click', function() {
+        const menu = document.getElementById('user-menu');
+        menu.classList.toggle('hidden');
+        menu.classList.toggle('opacity-0');
+        menu.classList.toggle('scale-95');
+    });
+    
+    // Notifications dropdown toggle
+    document.getElementById('notifications-btn').addEventListener('click', function() {
+        document.getElementById('notifications-dropdown').classList.toggle('hidden');
+    });
+    
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(event) {
+        // User menu
+        const userMenu = document.getElementById('user-menu');
+        const userMenuButton = document.getElementById('user-menu-button');
+        
+        if (userMenu && !userMenu.classList.contains('hidden') && 
+            !userMenuButton.contains(event.target) && 
+            !userMenu.contains(event.target)) {
+            userMenu.classList.add('hidden', 'opacity-0', 'scale-95');
+        }
+        
+        // Notifications dropdown
+        const notificationsDropdown = document.getElementById('notifications-dropdown');
+        const notificationsBtn = document.getElementById('notifications-btn');
+        
+        if (notificationsDropdown && !notificationsDropdown.classList.contains('hidden') && 
+            !notificationsBtn.contains(event.target) && 
+            !notificationsDropdown.contains(event.target)) {
+            notificationsDropdown.classList.add('hidden');
+        }
+    });
+    
+    // Course filter functionality
+    document.getElementById('apply-filter').addEventListener('click', function() {
+        const courseId = document.getElementById('course-filter').value;
+        if (courseId) {
+            window.location.href = '{{ url_for("teacher.grades") }}?course_id=' + courseId;
+        } else {
+            window.location.href = '{{ url_for("teacher.grades") }}';
+        }
+    });
+</script>
+{% endblock %}

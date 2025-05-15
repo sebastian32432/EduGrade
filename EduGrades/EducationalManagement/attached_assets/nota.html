@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="es" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ingreso de Notas - EduGrade</title>
+    
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            300: '#c4b5fd',
+                            400: '#a78bfa',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                        },
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out',
+                        'slide-up': 'slideUp 0.5s ease-out',
+                        'scale-in': 'scaleIn 0.3s ease-out',
+                        'spin-slow': 'spin 2s linear infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        scaleIn: {
+                            '0%': { transform: 'scale(0.9)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' },
+                        },
+                    },
+                },
+            },
+        }
+    </script>
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- jsPDF for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300">
+    <!-- Navbar -->
+    <nav class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="#" class="flex items-center">
+                        <i class="fas fa-graduation-cap text-primary-600 dark:text-primary-400 text-xl mr-2"></i>
+                        <span class="font-bold text-xl">EduGrade</span>
+                    </a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400" aria-label="Cambiar tema">
+                        <i class="fas fa-moon dark:hidden"></i>
+                        <i class="fas fa-sun hidden dark:block"></i>
+                    </button>
+                    <div class="relative">
+                        <button class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none" aria-label="Notificaciones">
+                            <i class="fas fa-bell"></i>
+                        </button>
+                        <span class="absolute top-0 right-0 h-4 w-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">2</span>
+                    </div>
+                    <div class="relative">
+                        <button id="user-menu-button" class="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400" aria-expanded="false" aria-haspopup="true">
+                            <span class="sr-only">Abrir menú de usuario</span>
+                            <div class="h-8 w-8 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center text-primary-600 dark:text-primary-400">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        </button>
+                        
+                        <div id="user-menu" class="hidden origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Mi Perfil</a>
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Configuración</a>
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Cerrar Sesión</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header section -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 mb-6 animate-fade-in">
+            <div class="flex flex-col md:flex-row justify-between md:items-center">
+                <div class="flex items-center">
+                    <div class="bg-primary-100 dark:bg-primary-900/50 p-3 rounded-lg">
+                        <i class="fas fa-edit text-primary-600 dark:text-primary-400 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Ingreso de Notas</h1>
+                        <p class="text-gray-600 dark:text-gray-400 mt-1">Gestione las calificaciones de sus estudiantes</p>
+                    </div>
+                </div>
+                <div class="mt-4 md:mt-0 flex flex-col sm:flex-row gap-3">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-search text-gray-400 dark:text-gray-500"></i>
+                        </div>
+                        <input type="text" id="search-student" placeholder="Buscar estudiante" class="pl-10 pr-4 py-2 w-full sm:w-auto border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 transition-colors duration-200">
+                    </div>
+                    <div>
+                        <select id="course-filter" class="w-full sm:w-auto border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white pl-3 pr-10 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 transition-colors duration-200">
+                            <option value="all">Todas las materias</option>
+                            <option value="math">Matemáticas</option>
+                            <option value="science">Ciencias</option>
+                            <option value="history">Historia</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 animate-slide-up">
+            <!-- Stats Summary -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-900/30">
+                    <div class="flex items-center">
+                        <div class="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Total de Estudiantes</p>
+                            <p class="text-lg font-semibold text-gray-800 dark:text-white" id="total-students">0</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-100 dark:border-green-900/30">
+                    <div class="flex items-center">
+                        <div class="h-10 w-10 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-600 dark:text-green-400">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Calificados</p>
+                            <p class="text-lg font-semibold text-gray-800 dark:text-white" id="graded-students">0</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-100 dark:border-yellow-900/30">
+                    <div class="flex items-center">
+                        <div class="h-10 w-10 rounded-full bg-yellow-100 dark:bg-yellow-900/50 flex items-center justify-center text-yellow-600 dark:text-yellow-400">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Pendientes</p>
+                            <p class="text-lg font-semibold text-gray-800 dark:text-white" id="pending-students">0</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-100 dark:border-purple-900/30">
+                    <div class="flex items-center">
+                        <div class="h-10 w-10 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Promedio General</p>
+                            <p class="text-lg font-semibold text-gray-800 dark:text-white" id="average-grade">0.00</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table Container with responsive scroll -->
+            <div class="overflow-x-auto">
+                <table id="grades-table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-800/50 rounded-tl-lg">Foto</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-800/50">Nombre</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-800/50">Materia</th>
+                            <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-800/50">Nota 1</th>
+                            <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-800/50">Nota 2</th>
+                            <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-800/50">Nota 3</th>
+                            <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-800/50">Nota 4</th>
+                            <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-800/50">Promedio</th>
+                            <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-800/50 rounded-tr-lg">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700" id="grades-body">
+                        <!-- Rows will be added via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="flex flex-col items-center justify-center py-12 hidden">
+                <div class="h-24 w-24 rounded-full bg-gray-100 dark:bg-gray-800/80 flex items-center justify-center text-gray-400 dark:text-gray-500 mb-4">
+                    <i class="fas fa-user-graduate text-4xl"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-1">No hay estudiantes registrados</h3>
+                <p class="text-gray-500 dark:text-gray-400 mb-4">Añada estudiantes para comenzar a ingresar notas</p>
+                <button id="empty-add-button" class="px-4 py-2 bg-primary-600 hover:bg-primary-700 dark:bg-primary-700 dark:hover:bg-primary-600 text-white rounded-md transition-colors duration-200 flex items-center">
+                    <i class="fas fa-plus mr-2"></i>
+                    <span>Agregar Estudiante</span>
+                </button>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="mt-6 flex flex-col sm:flex-row justify-between items-center">
+                <button id="add-student-btn" class="w-full sm:w-auto mb-3 sm:mb-0 flex items-center justify-center px-4 py-2 bg-primary-600 hover:bg-primary-700 dark:bg-primary-700 dark:hover:bg-primary-600 text-white rounded-md transition-colors duration-200">
+                    <i class="fas fa-plus mr-2"></i>
+                    <span>Agregar Estudiante</span>
+                </button>
+                <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                    <button id="save-all-btn" class="flex items-center justify-center px-4 py-2 bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white rounded-md transition-colors duration-200 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed">
+                        <i class="fas fa-save mr-2"></i>
+                        <span>Guardar Todo</span>
+                    </button>
+                    <button id="export-btn" class="flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white rounded-md transition-colors duration-200 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed">
+                        <i class="fas fa-file-export mr-2"></i>
+                        <span>Exportar</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Pagination Controls -->
+            <div class="mt-6 flex justify-between items-center">
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <span id="showing-text">Mostrando 0 estudiantes</span>
+                </p>
+                <div class="flex items-center space-x-2">
+                    <button id="prev-page" class="p-2 rounded-md bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <span id="page-info" class="text-sm text-gray-600 dark:text-gray-400">Página 1</span>
+                    <button id="next-page" class="p-2 rounded-md bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para agregar estudiante -->
+    <div id="student-modal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black bg-opacity-50 transition-opacity" id="modal-backdrop"></div>
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center">
+            <div class="bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:max-w-lg sm:w-full animate-scale-in">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white" id="modal-title">Agregar Estudiante</h3>
+                </div>
+                <div class="px-6 py-4">
+                    <form id="student-form" class="space-y-4">
+                        <div>
+                            <label for="studentName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre Completo</label>
+                            <input type="text" id="studentName" class="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 transition-colors duration-200" placeholder="Nombre del estudiante" required>
+                        </div>
+                        <div>
+                            <label for="subject" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Materia</label>
+                            <select id="subject" class="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 transition-colors duration-200" required>
+                                <option value="">Seleccione una materia</option>
+                                <option value="Matemáticas">Matemáticas</option>
+                                <option value="Ciencias">Ciencias</option>
+                                <option value="Historia">Historia</option>
+                                <option value="Lenguaje">Lenguaje</option>
+                                <option value="Inglés">Inglés</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="photoInput" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Foto</label>
+                            <div class="mt-1 flex items-center">
+                                <div id="photo-preview" class="h-20 w-20 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center text-gray-400 dark:text-gray-500 overflow-hidden">
+                                    <i class="fas fa-user text-2xl" id="photo-placeholder"></i>
+                                    <img id="photo-image" class="h-full w-full object-cover hidden" alt="Foto de perfil">
+                                </div>
+                                <label for="photoInput" class="ml-5 rounded-md shadow-sm py-2 px-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-sm leading-4 font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 cursor-pointer transition-colors duration-200">
+                                    Cambiar
+                                </label>
+                                <input id="photoInput" name="photoInput" type="file" class="sr-only" accept="image/*">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row-reverse gap-2">
+                    <button type="button" id="save-student-btn" class="w-full sm:w-auto inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-base font-medium text-white hover:bg-primary-700 dark:bg-primary-700 dark:hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 transition-colors duration-200">
+                        Guardar
+                    </button>
+                    <button type="button" id="cancel-modal-btn" class="w-full sm:w-auto inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 transition-colors duration-200">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para PDF -->
+    <div id="pdf-modal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black bg-opacity-50 transition-opacity" id="pdf-backdrop"></div>
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center">
+            <div class="bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:max-w-4xl sm:w-full animate-scale-in">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                    <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white">
+                        <i class="fas fa-file-pdf text-red-600 mr-2"></i>
+                        Reporte de Calificaciones
+                    </h3>
+                    <button type="button" id="close-pdf-btn" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <div class="px-6 py-4">
+                    <div class="bg-gray-50 dark:bg-gray-700 p-4 mb-4 rounded-md shadow-sm">
+                        <h4 class="font-medium mb-2 text-gray-900 dark:text-white flex items-center">
+                            <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                            Cómo guardar este reporte
+                        </h4>
+                        <p class="text-sm text-gray-700 dark:text-gray-300">
+                            Para guardar este reporte, haga clic derecho sobre el documento y seleccione "Guardar como..." o utilice el botón de guardar a continuación.
+                        </p>
+                    </div>
+                    
+                    <div id="pdf-container" class="bg-white rounded-md overflow-hidden shadow-md max-h-[70vh] flex justify-center mb-4">
+                        <!-- PDF iframe will be inserted here -->
+                    </div>
+                    
+                    <div class="flex justify-center">
+                        <button id="save-pdf-btn" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md shadow-sm flex items-center justify-center">
+                            <i class="fas fa-save mr-2"></i>
+                            Guardar PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 z-50 hidden transform transition-transform duration-300 ease-in-out">
+        <div class="flex items-center px-4 py-3 rounded-lg shadow-lg max-w-md">
+            <div class="flex-shrink-0 mr-3">
+                <i id="toast-icon" class="fas fa-check-circle text-xl"></i>
+            </div>
+            <div>
+                <p id="toast-message" class="font-medium"></p>
+            </div>
+            <button id="close-toast" class="ml-auto">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // jsPDF namespace
+        const { jsPDF } = window.jspdf;
+        
+        // State management
+        let students = [];
+        let currentPage = 1;
+        let rowsPerPage = 5;
+        let lastStudentId = 0;
+        let currentPdfDataUrl = null;
+        
+        // DOM Elements
+        const gradesTable = document.getElementById('grades-table');
+        const gradesBody = document.getElementById('grades-body');
+        const emptyState = document.getElementById('empty-state');
+        const studentModal = document.getElementById('student-modal');
+        const pdfModal = document.getElementById('pdf-modal');
+        const studentForm = document.getElementById('student-form');
+        const addStudentBtn = document.getElementById('add-student-btn');
+        const emptyAddButton = document.getElementById('empty-add-button');
+        const saveStudentBtn = document.getElementById('save-student-btn');
+        const cancelModalBtn = document.getElementById('cancel-modal-btn');
+        const closePdfBtn = document.getElementById('close-pdf-btn');
+        const savePdfBtn = document.getElementById('save-pdf-btn');
+        const modalBackdrop = document.getElementById('modal-backdrop');
+        const pdfBackdrop = document.getElementById('pdf-backdrop');
+        const pdfContainer = document.getElementById('pdf-container');
+        const photoInput = document.getElementById('photoInput');
+        const photoPreview = document.getElementById('photo-preview');
+        const photoPlaceholder = document.getElementById('photo-placeholder');
+        const photoImage = document.getElementById('photo-image');
+        const searchStudent = document.getElementById('search-student');
+        const courseFilter = document.getElementById('course-filter');
+        const userMenuButton = document.getElementById('user-menu-button');
+        const userMenu = document.getElementById('user-menu');
+        const saveAllBtn = document.getElementById('save-all-btn');
+        const exportBtn = document.getElementById('export-btn');
+        const prevPageBtn = document.getElementById('prev-page');
+        const nextPageBtn = document.getElementById('next-page');
+        const pageInfo = document.getElementById('page-info');
+        const showingText = document.getElementById('showing-text');
+        const toast = document.getElementById('toast');
+        const toastIcon = document.getElementById('toast-icon');
+        const toastMessage = document.getElementById('toast-message');
+        const closeToast = document.getElementById('close-toast');
+        
+        // Stats Elements
+        const totalStudentsElement = document.getElementById('total-students');
+        const gradedStudentsElement = document.getElementById('graded-students');
+        const pendingStudentsElement = document.getElementById('pending-students');
+        const averageGradeElement = document.getElementById('average-grade');
+        
+        // Initialize with sample data
+        function initializeData() {
+            // Sample student data
+            const sampleStudents = [
+                { id: 1, name: "Ana Martínez", subject: "Matemáticas", photoUrl: createDummyPhoto("#6366f1"), grades: [8.5, 9.0, 7.5, 8.0], isSubmitted: true },
+                { id: 2, name: "Carlos López", subject: "Ciencias", photoUrl: createDummyPhoto("#10b981"), grades: [7.5, 8.0, 9.0, 8.5], isSubmitted: false },
+                { id: 3, name: "María García", subject: "Historia", photoUrl: createDummyPhoto("#f59e0b"), grades: [9.0, 9.5, 8.5, 9.0], isSubmitted: true },
+                { id: 4, name: "Juan Rodríguez", subject: "Matemáticas", photoUrl: createDummyPhoto("#ef4444"), grades: [8.0, 7.5, 8.5, 8.0], isSubmitted: false },
+                { id: 5, name: "Elena Torres", subject: "Lenguaje", photoUrl: createDummyPhoto("#8b5cf6"), grades: [9.5, 9.0, 9.5, 9.0], isSubmitted: true },
+                { id: 6, name: "Pedro Navarro", subject: "Inglés", photoUrl: createDummyPhoto("#ec4899"), grades: [7.0, 8.0, 7.5, 8.5], isSubmitted: false },
+                { id: 7, name: "Laura Ruiz", subject: "Ciencias", photoUrl: createDummyPhoto("#14b8a6"), grades: [8.5, 9.0, 8.0, 8.5], isSubmitted: true },
+            ];
+            
+            students = sampleStudents;
+            lastStudentId = students.length;
+            
+            renderTable();
+            updateStats();
+            updatePagination();
+        }
+        
+        // Create a colored circle with initials for students without photos
+        function createDummyPhoto(color) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 100;
+            canvas.height = 100;
+            const ctx = canvas.getContext('2d');
+            
+            // Draw background
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(50, 50, 50, 0, Math.PI * 2);
+            ctx.fill();
+            
+            return canvas.toDataURL();
+        }
+        
+        // Calculate the average of grades
+        function calculateAverage(grades) {
+            if (!grades || grades.length === 0) return 0;
+            
+            const validGrades = grades.filter(grade => !isNaN(parseFloat(grade)));
+            if (validGrades.length === 0) return 0;
+            
+            const sum = validGrades.reduce((acc, grade) => acc + parseFloat(grade), 0);
+            return (sum / validGrades.length).toFixed(2);
+        }
+        
+        // Function to update stats
+        function updateStats() {
+            const totalStudents = students.length;
+            const gradedStudents = students.filter(student => student.isSubmitted).length;
+            const pendingStudents = totalStudents - gradedStudents;
+            
+            // Calculate overall average grade
+            let totalSum = 0;
+            let totalCount = 0;
+            
+            students.forEach(student => {
+                student.grades.forEach(grade => {
+                    if (!isNaN(parseFloat(grade))) {
+                        totalSum += parseFloat(grade);
+                        totalCount++;
+                    }
+                });
+            });
+            
+            const averageGrade = totalCount > 0 ? (totalSum / totalCount).toFixed(2) : "0.00";
+            
+            // Update DOM elements
+            totalStudentsElement.textContent = totalStudents;
+            gradedStudentsElement.textContent = gradedStudents;
+            pendingStudentsElement.textContent = pendingStudents;
+            averageGradeElement.textContent = averageGrade;
+        }
+        
+        // Filter and sort students
+        function getFilteredStudents() {
+            let filtered = [...students];
+            
+            // Apply search filter
+            const searchTerm = searchStudent.value.toLowerCase();
+            if (searchTerm) {
+                filtered = filtered.filter(student => 
+                    student.name.toLowerCase().includes(searchTerm) || 
+                    student.subject.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            // Apply course filter
+            const courseValue = courseFilter.value;
+            if (courseValue !== 'all') {
+                const courseMap = {
+                    'math': 'Matemáticas',
+                    'science': 'Ciencias',
+                    'history': 'Historia'
+                };
+                filtered = filtered.filter(student => student.subject === courseMap[courseValue]);
+            }
+            
+            return filtered;
+        }
+        
+        // Update pagination info
+        function updatePagination() {
+            const filtered = getFilteredStudents();
+            const totalPages = Math.ceil(filtered.length / rowsPerPage);
+            
+            // Ensure current page is valid
+            if (currentPage > totalPages) {
+                currentPage = Math.max(1, totalPages);
+            }
+            
+            // Update page info text
+            pageInfo.textContent = `Página ${currentPage}${totalPages > 0 ? ' de ' + totalPages : ''}`;
+            
+            // Update buttons state
+            prevPageBtn.disabled = currentPage <= 1;
+            nextPageBtn.disabled = currentPage >= totalPages;
+            
+            // Update showing text
+            const startIndex = (currentPage - 1) * rowsPerPage;
+            const endIndex = Math.min(startIndex + rowsPerPage, filtered.length);
+            showingText.textContent = `Mostrando ${filtered.length > 0 ? startIndex + 1 : 0} - ${endIndex} de ${filtered.length} estudiantes`;
+        }
+        
+        // Render table with students data
+        function renderTable() {
+            const filtered = getFilteredStudents();
+            
+            // Show empty state if no students
+            if (filtered.length === 0) {
+                gradesTable.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            // Show table and hide empty state
+            gradesTable.classList.remove('hidden');
+            emptyState.classList.add('hidden');
+            
+            // Clear table body
+            gradesBody.innerHTML = '';
+            
+            // Calculate pagination
+            const startIndex = (currentPage - 1) * rowsPerPage;
+            const endIndex = Math.min(startIndex + rowsPerPage, filtered.length);
+            const paginatedStudents = filtered.slice(startIndex, endIndex);
+            
+            // Add rows for each student
+            paginatedStudents.forEach(student => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors duration-150';
+                
+                // Format for cells
+                const average = calculateAverage(student.grades);
+                const gradeStatus = student.isSubmitted 
+                    ? '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200">Entregado</span>'
+                    : '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200">Pendiente</span>';
+                
+                // Create grade inputs
+                const gradeInputs = student.grades.map((grade, index) => {
+                    return `<input type="number" 
+                                value="${grade}" 
+                                min="0" 
+                                max="10" 
+                                step="0.1"
+                                class="w-16 text-center border border-gray-300 dark:border-gray-600 rounded-lg py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-primary-500 dark:focus:border-primary-400 ${student.isSubmitted ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed' : ''}"
+                                ${student.isSubmitted ? 'disabled' : ''} 
+                                data-student-id="${student.id}" 
+                                data-grade-index="${index}" 
+                                onchange="updateGrade(this)">`;
+                });
+                
+                // Set row content
+                row.innerHTML = `
+                    <td class="px-4 py-3 whitespace-nowrap">
+                        <div class="h-10 w-10 rounded-full overflow-hidden shadow">
+                            <img src="${student.photoUrl}" alt="Foto de ${student.name}" class="h-full w-full object-cover">
+                        </div>
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900 dark:text-white">${student.name}</div>
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap">
+                        <div class="text-sm text-gray-700 dark:text-gray-300">${student.subject}</div>
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap text-center">${gradeInputs[0]}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-center">${gradeInputs[1]}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-center">${gradeInputs[2]}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-center">${gradeInputs[3]}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-center">
+                        <span class="text-sm font-medium ${parseFloat(average) >= 7.0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}">${average}</span>
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap text-center">
+                        ${student.isSubmitted ? 
+                          `<button class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 focus:outline-none transition-colors duration-200" onclick="editGrades(${student.id})">
+                              <i class="fas fa-edit"></i>
+                           </button>` : 
+                          `<button class="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300 focus:outline-none transition-colors duration-200" onclick="submitGrade(${student.id})">
+                              <i class="fas fa-check"></i>
+                           </button>`
+                        }
+                        <button class="ml-3 text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 focus:outline-none transition-colors duration-200" onclick="deleteStudent(${student.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                
+                gradesBody.appendChild(row);
+            });
+            
+            updatePagination();
+        }
+        
+        // Update a grade when input changes
+        function updateGrade(input) {
+            const studentId = parseInt(input.dataset.studentId);
+            const gradeIndex = parseInt(input.dataset.gradeIndex);
+            const value = parseFloat(input.value);
+            
+            // Find student
+            const student = students.find(s => s.id === studentId);
+            if (student) {
+                // Update grade
+                student.grades[gradeIndex] = isNaN(value) ? 0 : value;
+                
+                // Find row to update average
+                const row = input.closest('tr');
+                const averageCell = row.querySelector('td:nth-last-child(2)');
+                const average = calculateAverage(student.grades);
+                
+                // Update average cell
+                averageCell.innerHTML = `<span class="text-sm font-medium ${parseFloat(average) >= 7.0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}">${average}</span>`;
+                
+                // Update stats
+                updateStats();
+            }
+        }
+        
+        // Submit grades for a student
+        function submitGrade(studentId) {
+            const student = students.find(s => s.id === studentId);
+            if (student) {
+                student.isSubmitted = true;
+                renderTable();
+                updateStats();
+                showToast('success', 'Calificaciones entregadas correctamente');
+            }
+        }
+        
+        // Edit grades for a student
+        function editGrades(studentId) {
+            const student = students.find(s => s.id === studentId);
+            if (student) {
+                student.isSubmitted = false;
+                renderTable();
+                showToast('info', 'Ahora puede editar las calificaciones');
+            }
+        }
+        
+        // Delete a student
+        function deleteStudent(studentId) {
+            if (confirm('¿Está seguro de eliminar este estudiante?')) {
+                students = students.filter(s => s.id !== studentId);
+                renderTable();
+                updateStats();
+                showToast('warning', 'Estudiante eliminado');
+            }
+        }
+        
+        // Open student modal
+        function openStudentModal() {
+            studentModal.classList.remove('hidden');
+            studentForm.reset();
+            photoPlaceholder.classList.remove('hidden');
+            photoImage.classList.add('hidden');
+        }
+        
+        // Close student modal
+        function closeStudentModal() {
+            studentModal.classList.add('hidden');
+        }
+        
+        // Open PDF modal
+        function openPdfModal() {
+            pdfModal.classList.remove('hidden');
+        }
+        
+        // Close PDF modal
+        function closePdfModal() {
+            pdfModal.classList.add('hidden');
+        }
+        
+        // Add a new student
+        function addStudent() {
+            const nameInput = document.getElementById('studentName');
+            const subjectInput = document.getElementById('subject');
+            
+            const name = nameInput.value.trim();
+            const subject = subjectInput.value.trim();
+            
+            if (!name || !subject) {
+                showToast('error', 'Por favor complete todos los campos');
+                return;
+            }
+            
+            // Get photo or create dummy
+            let photoUrl;
+            if (photoImage.src && !photoImage.classList.contains('hidden')) {
+                photoUrl = photoImage.src;
+            } else {
+                // Generate a color based on the subject
+                const subjectColors = {
+                    'Matemáticas': '#6366f1',
+                    'Ciencias': '#10b981',
+                    'Historia': '#f59e0b',
+                    'Lenguaje': '#ef4444',
+                    'Inglés': '#8b5cf6'
+                };
+                const color = subjectColors[subject] || '#6366f1';
+                photoUrl = createDummyPhoto(color);
+            }
+            
+            // Create new student
+            const newStudent = {
+                id: ++lastStudentId,
+                name,
+                subject,
+                photoUrl,
+                grades: [0, 0, 0, 0],
+                isSubmitted: false
+            };
+            
+            // Add to students array
+            students.push(newStudent);
+            
+            // Go to last page to show new student
+            currentPage = Math.ceil(students.length / rowsPerPage);
+            
+            // Render table and close modal
+            renderTable();
+            updateStats();
+            closeStudentModal();
+            
+            showToast('success', 'Estudiante agregado correctamente');
+        }
+        
+        // Generate PDF report
+        function generatePdfReport() {
+            // Create new PDF document
+            const doc = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
+            
+            // Add title and subtitle
+            doc.setFont("helvetica", "bold");
+            doc.setTextColor(128, 0, 128); // Violet color for heading
+            doc.setFontSize(24);
+            doc.text("EduGrade", 105, 20, { align: "center" });
+            
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(80, 80, 80);
+            doc.setFontSize(16);
+            doc.text("Reporte de Calificaciones", 105, 30, { align: "center" });
+            
+            // Add date
+            const today = new Date();
+            const dateStr = today.toLocaleDateString('es-ES', { 
+                year: 'numeric',
+                month: 'long', 
+                day: 'numeric' 
+            });
+            doc.setFontSize(10);
+            doc.text(`Fecha de Generación: ${dateStr}`, 105, 38, { align: "center" });
+            
+            // Add stats info
+            doc.setDrawColor(220, 220, 220);
+            doc.setFillColor(245, 245, 245);
+            doc.roundedRect(20, 45, 170, 25, 3, 3, 'FD');
+            
+            doc.setFontSize(12);
+            doc.setTextColor(80, 80, 80);
+            
+            doc.text(`Total de Estudiantes: ${totalStudentsElement.textContent}`, 30, 54);
+            doc.text(`Calificados: ${gradedStudentsElement.textContent}`, 90, 54);
+            doc.text(`Pendientes: ${pendingStudentsElement.textContent}`, 140, 54);
+            doc.text(`Promedio General: ${averageGradeElement.textContent}`, 30, 64);
+            
+            // Filter criteria
+            if (searchStudent.value || courseFilter.value !== 'all') {
+                doc.setFontSize(10);
+                doc.setTextColor(100, 100, 100);
+                let filterText = "Filtros aplicados: ";
+                if (searchStudent.value) {
+                    filterText += `Búsqueda: "${searchStudent.value}" `;
+                }
+                if (courseFilter.value !== 'all') {
+                    const courseMap = {
+                        'math': 'Matemáticas',
+                        'science': 'Ciencias',
+                        'history': 'Historia'
+                    };
+                    filterText += `Materia: ${courseMap[courseFilter.value]}`;
+                }
+                doc.text(filterText, 20, 80);
+            }
+            
+            // Create table with student data
+            const filtered = getFilteredStudents();
+            
+            // Table headers for autoTable
+            const headers = [
+                { header: 'ID', dataKey: 'id' },
+                { header: 'Nombre', dataKey: 'name' },
+                { header: 'Materia', dataKey: 'subject' },
+                { header: 'Nota 1', dataKey: 'grade1' },
+                { header: 'Nota 2', dataKey: 'grade2' },
+                { header: 'Nota 3', dataKey: 'grade3' },
+                { header: 'Nota 4', dataKey: 'grade4' },
+                { header: 'Promedio', dataKey: 'average' },
+                { header: 'Estado', dataKey: 'status' }
+            ];
+            
+            // Table data
+            const tableData = filtered.map(student => {
+                const average = calculateAverage(student.grades);
+                return {
+                    id: student.id,
+                    name: student.name,
+                    subject: student.subject,
+                    grade1: student.grades[0],
+                    grade2: student.grades[1],
+                    grade3: student.grades[2],
+                    grade4: student.grades[3],
+                    average: average,
+                    status: student.isSubmitted ? 'Entregado' : 'Pendiente'
+                };
+            });
+            
+            // Add the table
+            doc.autoTable({
+                startY: 85,
+                head: [headers.map(h => h.header)],
+                body: tableData.map(item => 
+                    headers.map(h => item[h.dataKey])
+                ),
+                headStyles: {
+                    fillColor: [124, 58, 237], // primary-600 color
+                    textColor: [255, 255, 255],
+                    fontStyle: 'bold',
+                    halign: 'center'
+                },
+                columnStyles: {
+                    0: { halign: 'center', cellWidth: 10 },
+                    1: { cellWidth: 35 },
+                    2: { cellWidth: 25 },
+                    3: { halign: 'center', cellWidth: 15 },
+                    4: { halign: 'center', cellWidth: 15 },
+                    5: { halign: 'center', cellWidth: 15 },
+                    6: { halign: 'center', cellWidth: 15 },
+                    7: { halign: 'center', cellWidth: 20 },
+                    8: { halign: 'center', cellWidth: 25 }
+                },
+                styles: {
+                    overflow: 'ellipsize',
+                    font: 'helvetica',
+                    fontSize: 9
+                },
+                didDrawCell: (data) => {
+                    // Color the average cell based on the value
+                    if (data.section === 'body' && data.column.index === 7) {
+                        if (parseFloat(data.cell.raw) >= 7.0) {
+                            doc.setTextColor(0, 128, 0); // Green color for passing grades
+                        } else {
+                            doc.setTextColor(220, 0, 0); // Red color for failing grades
+                        }
+                    } else if (data.section === 'body') {
+                        doc.setTextColor(60, 60, 60); // Reset text color
+                    }
+                },
+                didParseCell: (data) => {
+                    // Format the status cell
+                    if (data.section === 'body' && data.column.index === 8) {
+                        if (data.cell.raw === 'Entregado') {
+                            data.cell.styles.textColor = [34, 197, 94]; // Green for submitted
+                        } else {
+                            data.cell.styles.textColor = [234, 179, 8]; // Yellow for pending
+                        }
+                    }
+                }
+            });
+            
+            // Add footer
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(10);
+                doc.setTextColor(150, 150, 150);
+                doc.text(`Página ${i} de ${pageCount}`, 105, 287, { align: 'center' });
+                doc.text('EduGrade - Sistema de Gestión de Notas', 105, 292, { align: 'center' });
+            }
+            
+            // Save the PDF to data URL and show in modal
+            const pdfDataUrl = doc.output('dataurlstring');
+            currentPdfDataUrl = pdfDataUrl;
+            showPdfPreview(pdfDataUrl);
+            openPdfModal();
+        }
+        
+        // Show PDF preview in the modal
+        function showPdfPreview(dataUrl) {
+            // Clear previous content
+            pdfContainer.innerHTML = '';
+            
+            // Create iframe to display PDF
+            const iframe = document.createElement('iframe');
+            iframe.src = dataUrl;
+            iframe.className = 'w-full h-[500px] border-0';
+            iframe.title = 'Vista previa del reporte';
+            
+            pdfContainer.appendChild(iframe);
+        }
+        
+        // Export grades
+        function exportGrades() {
+            // Generate the PDF report
+            generatePdfReport();
+        }
+        
+        // Save PDF
+        function savePdf() {
+            if (currentPdfDataUrl) {
+                const link = document.createElement('a');
+                link.href = currentPdfDataUrl;
+                link.download = `EduGrade_Reporte_${new Date().toISOString().split('T')[0]}.pdf`;
+                link.target = '_blank';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showToast('success', 'Guardando PDF. Por favor, permita la descarga si es solicitado por el navegador.');
+            }
+        }
+        
+        // Show toast notification
+        function showToast(type, message) {
+            // Set classes and icon based on type
+            const typeConfig = {
+                success: {
+                    bgClass: 'bg-green-100 dark:bg-green-900/60',
+                    textClass: 'text-green-700 dark:text-green-300',
+                    icon: 'fa-check-circle'
+                },
+                error: {
+                    bgClass: 'bg-red-100 dark:bg-red-900/60',
+                    textClass: 'text-red-700 dark:text-red-300',
+                    icon: 'fa-exclamation-circle'
+                },
+                warning: {
+                    bgClass: 'bg-yellow-100 dark:bg-yellow-900/60',
+                    textClass: 'text-yellow-700 dark:text-yellow-300',
+                    icon: 'fa-exclamation-triangle'
+                },
+                info: {
+                    bgClass: 'bg-blue-100 dark:bg-blue-900/60',
+                    textClass: 'text-blue-700 dark:text-blue-300',
+                    icon: 'fa-info-circle'
+                }
+            };
+            
+            const config = typeConfig[type] || typeConfig.info;
+            
+            // Apply classes
+            toast.className = `fixed bottom-4 right-4 z-50 transform transition-transform duration-300 ease-in-out ${config.bgClass}`;
+            toastIcon.className = `fas ${config.icon} text-xl ${config.textClass}`;
+            toastMessage.className = `font-medium ${config.textClass}`;
+            
+            // Set message
+            toastMessage.textContent = message;
+            
+            // Show toast
+            toast.classList.remove('hidden');
+            toast.classList.remove('translate-y-10', 'opacity-0');
+            
+            // Hide after 3 seconds
+            setTimeout(() => {
+                hideToast();
+            }, 3000);
+        }
+        
+        // Hide toast notification
+        function hideToast() {
+            toast.classList.add('translate-y-10', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 300);
+        }
+        
+        // Filter change handler
+        function handleFilterChange() {
+            currentPage = 1;
+            renderTable();
+        }
+        
+        // Save all grades
+        function saveAllGrades() {
+            // Find all unsaved students
+            const unsavedStudents = students.filter(s => !s.isSubmitted);
+            
+            if (unsavedStudents.length === 0) {
+                showToast('info', 'No hay calificaciones pendientes');
+                return;
+            }
+            
+            // Mark all as submitted
+            unsavedStudents.forEach(student => {
+                student.isSubmitted = true;
+            });
+            
+            renderTable();
+            updateStats();
+            showToast('success', `${unsavedStudents.length} estudiantes calificados correctamente`);
+        }
+        
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize with data
+            initializeData();
+            
+            // Modal buttons
+            addStudentBtn.addEventListener('click', openStudentModal);
+            emptyAddButton.addEventListener('click', openStudentModal);
+            saveStudentBtn.addEventListener('click', addStudent);
+            cancelModalBtn.addEventListener('click', closeStudentModal);
+            modalBackdrop.addEventListener('click', closeStudentModal);
+            
+            // PDF Modal buttons
+            closePdfBtn.addEventListener('click', closePdfModal);
+            pdfBackdrop.addEventListener('click', closePdfModal);
+            savePdfBtn.addEventListener('click', savePdf);
+            
+            // Photo input change
+            photoInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        photoImage.src = e.target.result;
+                        photoPlaceholder.classList.add('hidden');
+                        photoImage.classList.remove('hidden');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            // Filters
+            searchStudent.addEventListener('input', handleFilterChange);
+            courseFilter.addEventListener('change', handleFilterChange);
+            
+            // Action buttons
+            saveAllBtn.addEventListener('click', saveAllGrades);
+            exportBtn.addEventListener('click', exportGrades);
+            
+            // Pagination
+            prevPageBtn.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderTable();
+                }
+            });
+            
+            nextPageBtn.addEventListener('click', () => {
+                const filtered = getFilteredStudents();
+                const totalPages = Math.ceil(filtered.length / rowsPerPage);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderTable();
+                }
+            });
+            
+            // User menu toggle
+            userMenuButton.addEventListener('click', () => {
+                userMenu.classList.toggle('hidden');
+            });
+            
+            // Close user menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (userMenu && !userMenuButton.contains(e.target) && !userMenu.contains(e.target)) {
+                    userMenu.classList.add('hidden');
+                }
+            });
+            
+            // Close toast
+            closeToast.addEventListener('click', hideToast);
+        });
+        
+        // Dark mode toggle
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        
+        // Check for dark mode preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        
+        // Listen for theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+        
+        // Handle manual dark mode toggle
+        themeToggleBtn.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+        });
+    </script>
+</body>
+</html>

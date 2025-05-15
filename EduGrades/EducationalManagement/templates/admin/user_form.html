@@ -1,0 +1,145 @@
+{% extends 'layout.html' %}
+
+{% block title %}{{ title }} - EduGrade{% endblock %}
+
+{% block content %}
+<!-- Navbar -->
+<nav class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+            <div class="flex items-center">
+                <a href="{{ url_for('admin.dashboard') }}" class="flex items-center">
+                    <i class="fas fa-graduation-cap text-primary-600 dark:text-primary-400 text-xl mr-2"></i>
+                    <span class="font-bold text-xl">EduGrade</span>
+                </a>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400" aria-label="Cambiar tema">
+                    <i class="fas fa-moon dark:hidden"></i>
+                    <i class="fas fa-sun hidden dark:block"></i>
+                </button>
+                <div class="relative">
+                    <button class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none" aria-label="Notificaciones">
+                        <i class="fas fa-bell"></i>
+                    </button>
+                    <span class="absolute top-0 right-0 h-4 w-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">2</span>
+                </div>
+                <div class="relative">
+                    <button id="user-menu-button" class="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400" aria-expanded="false" aria-haspopup="true">
+                        <span class="sr-only">Abrir menú de usuario</span>
+                        <div class="h-8 w-8 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center text-primary-600 dark:text-primary-400">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    </button>
+                    
+                    <div id="user-menu" class="hidden origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
+                        <a href="{{ url_for('admin.dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Panel de Control</a>
+                        <a href="{{ url_for('admin.users') }}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Usuarios</a>
+                        <a href="{{ url_for('admin.reports') }}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Reportes</a>
+                        <a href="{{ url_for('auth.logout') }}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Cerrar Sesión</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="max-w-4xl mx-auto px-4 py-8">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md animate-fade-in">
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-primary-100 dark:bg-primary-900/50 p-2 rounded-lg">
+                        <i class="fas fa-user-plus text-primary-600 dark:text-primary-400"></i>
+                    </div>
+                    <h1 class="ml-3 text-xl font-bold text-gray-800 dark:text-white">{{ title }}</h1>
+                </div>
+                <a href="{{ url_for('admin.users') }}" class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                    <i class="fas fa-times"></i>
+                </a>
+            </div>
+        </div>
+        
+        <div class="p-6">
+            <form method="POST" class="space-y-6">
+                {{ form.hidden_tag() }}
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="{{ form.first_name.id }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nombre</label>
+                        {{ form.first_name(class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-400 dark:focus:border-primary-400 dark:bg-gray-700") }}
+                        {% if form.first_name.errors %}
+                            <div class="text-red-500 text-sm mt-1">{{ form.first_name.errors[0] }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.last_name.id }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Apellido</label>
+                        {{ form.last_name(class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-400 dark:focus:border-primary-400 dark:bg-gray-700") }}
+                        {% if form.last_name.errors %}
+                            <div class="text-red-500 text-sm mt-1">{{ form.last_name.errors[0] }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div>
+                    <label for="{{ form.username.id }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nombre de usuario</label>
+                    {{ form.username(class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-400 dark:focus:border-primary-400 dark:bg-gray-700") }}
+                    {% if form.username.errors %}
+                        <div class="text-red-500 text-sm mt-1">{{ form.username.errors[0] }}</div>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.email.id }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Correo electrónico</label>
+                    {{ form.email(class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-400 dark:focus:border-primary-400 dark:bg-gray-700") }}
+                    {% if form.email.errors %}
+                        <div class="text-red-500 text-sm mt-1">{{ form.email.errors[0] }}</div>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.role.id }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Rol</label>
+                    {{ form.role(class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-400 dark:focus:border-primary-400 dark:bg-gray-700") }}
+                    {% if form.role.errors %}
+                        <div class="text-red-500 text-sm mt-1">{{ form.role.errors[0] }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="flex items-center">
+                    {{ form.is_active(class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded") }}
+                    <label for="{{ form.is_active.id }}" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">Usuario activo</label>
+                </div>
+                
+                <div class="flex justify-end space-x-3">
+                    <a href="{{ url_for('admin.users') }}" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:focus:ring-gray-400">
+                        Cancelar
+                    </a>
+                    {{ form.submit(class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // User menu toggle
+    document.getElementById('user-menu-button').addEventListener('click', function() {
+        document.getElementById('user-menu').classList.toggle('hidden');
+    });
+    
+    // Close the menu when clicking outside
+    document.addEventListener('click', function(event) {
+        const userMenu = document.getElementById('user-menu');
+        const userMenuButton = document.getElementById('user-menu-button');
+        
+        if (userMenu && !userMenu.classList.contains('hidden') && 
+            !userMenuButton.contains(event.target) && 
+            !userMenu.contains(event.target)) {
+            userMenu.classList.add('hidden');
+        }
+    });
+</script>
+{% endblock %}

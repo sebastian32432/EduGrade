@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="es" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabla de Usuarios Mejorada</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .table-container { max-height: 500px; overflow-y: auto; }
+        .pagination-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-200">
+    <!-- Notification container -->
+    <div id="notification" class="fixed top-4 right-4 max-w-sm p-4 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 z-50"></div>
+
+    <div class="container max-w-6xl mx-auto px-4 py-8">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 md:p-8">
+            <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
+                <h1 class="text-2xl md:text-3xl font-bold text-primary dark:text-white">Tabla de Usuarios</h1>
+                <div class="flex items-center gap-2 ml-auto">
+                    <button id="exportBtn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center">
+                        <i class="fas fa-download mr-2"></i> Exportar CSV
+                    </button>
+                    <button id="addUserBtn" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg transition-colors flex items-center">
+                        <i class="fas fa-plus mr-2"></i> Agregar Usuario
+                    </button>
+                    <button id="darkModeToggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                        <i class="fas fa-moon dark:hidden"></i>
+                        <i class="fas fa-sun hidden dark:block"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filter and search -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <i class="fas fa-search text-gray-400"></i>
+                    </div>
+                    <input type="text" id="searchInput" class="w-full p-3 pl-10 text-base bg-gray-100 dark:bg-gray-700 border-0 rounded-lg focus:ring-2 focus:ring-primary" placeholder="Buscar usuarios...">
+                </div>
+                <select id="roleFilter" class="p-3 text-base bg-gray-100 dark:bg-gray-700 border-0 rounded-lg focus:ring-2 focus:ring-primary">
+                    <option value="all">Todos los roles</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Cliente">Cliente</option>
+                    <option value="Editor">Editor</option>
+                    <option value="Invitado">Invitado</option>
+                </select>
+                <div class="flex items-center justify-end text-sm text-gray-500 dark:text-gray-400">
+                    <span id="userCount">0</span> usuarios encontrados
+                </div>
+            </div>
+
+            <!-- Users table -->
+            <div class="table-container overflow-x-auto rounded-lg">
+                <table id="users-table" class="w-full mb-6">
+                    <thead class="bg-primary text-white sticky top-0 z-10">
+                        <tr>
+                            <th class="p-3 text-left rounded-tl-lg">ID</th>
+                            <th class="p-3 text-left">Foto</th>
+                            <th class="p-3 text-left cursor-pointer" onclick="sortTable('username')">
+                                Usuario <i class="fas fa-sort ml-1 text-opacity-50"></i>
+                            </th>
+                            <th class="p-3 text-left cursor-pointer" onclick="sortTable('lastname')">
+                                Apellido <i class="fas fa-sort ml-1 text-opacity-50"></i>
+                            </th>
+                            <th class="p-3 text-left cursor-pointer" onclick="sortTable('email')">
+                                Gmail <i class="fas fa-sort ml-1 text-opacity-50"></i>
+                            </th>
+                            <th class="p-3 text-left cursor-pointer" onclick="sortTable('role')">
+                                Rol <i class="fas fa-sort ml-1 text-opacity-50"></i>
+                            </th>
+                            <th class="p-3 text-center rounded-tr-lg">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700"></tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="flex justify-between items-center mt-4">
+                <button id="prevPage" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg pagination-btn" disabled>
+                    <i class="fas fa-arrow-left mr-2"></i> Anterior
+                </button>
+                <span class="text-sm text-gray-500 dark:text-gray-400">Página <span id="currentPage">1</span> de <span id="totalPages">1</span></span>
+                <button id="nextPage" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg pagination-btn">
+                    Siguiente <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit User Modal -->
+    <div id="userModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40 hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-md mx-4 transform transition-all fade-in">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="modalTitle" class="text-xl font-bold text-primary dark:text-white"></h2>
+                <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="userForm" class="space-y-4" novalidate>
+                <div class="flex justify-center mb-2">
+                    <div id="avatarPreview" class="w-24 h-24 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
+                        <i class="fas fa-user text-4xl text-gray-400 dark:text-gray-500"></i>
+                    </div>
+                </div>
+                <div>
+                    <label for="username" class="block mb-2 text-gray-700 dark:text-gray-300">Usuario</label>
+                    <input type="text" id="username" class="w-full p-3 bg-gray-100 dark:bg-gray-700 border-0 rounded-lg focus:ring-2 focus:ring-primary" placeholder="Nombre de usuario" required>
+                    <p id="usernameError" class="mt-1 text-red-500 text-sm hidden"></p>
+                </div>
+                <div>
+                    <label for="lastname" class="block mb-2 text-gray-700 dark:text-gray-300">Apellido</label>
+                    <input type="text" id="lastname" class="w-full p-3 bg-gray-100 dark:bg-gray-700 border-0 rounded-lg focus:ring-2 focus:ring-primary" placeholder="Apellido" required>
+                    <p id="lastnameError" class="mt-1 text-red-500 text-sm hidden"></p>
+                </div>
+                <div>
+                    <label for="email" class="block mb-2 text-gray-700 dark:text-gray-300">Gmail</label>
+                    <input type="email" id="email" class="w-full p-3 bg-gray-100 dark:bg-gray-700 border-0 rounded-lg focus:ring-2 focus:ring-primary" placeholder="ejemplo@gmail.com" required>
+                    <p id="emailError" class="mt-1 text-red-500 text-sm hidden"></p>
+                </div>
+                <div>
+                    <label for="role" class="block mb-2 text-gray-700 dark:text-gray-300">Rol</label>
+                    <select id="role" class="w-full p-3 bg-gray-100 dark:bg-gray-700 border-0 rounded-lg focus:ring-2 focus:ring-primary" required>
+                        <option value="">Seleccione un rol</option>
+                        <option value="Admin">Admin</option>
+                        <option value="Cliente">Cliente</option>
+                        <option value="Editor">Editor</option>
+                        <option value="Invitado">Invitado</option>
+                    </select>
+                    <p id="roleError" class="mt-1 text-red-500 text-sm hidden"></p>
+                </div>
+                <div class="flex space-x-2 pt-2">
+                    <button type="submit" class="grow bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg transition-colors">Guardar</button>
+                    <button type="button" onclick="closeModal()" class="grow bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-4 py-2 rounded-lg transition-colors">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40 hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-md mx-4 fade-in">
+            <div class="text-center mb-6">
+                <i class="fas fa-exclamation-triangle text-red-500 text-4xl mb-4"></i>
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white">Confirmar Eliminación</h2>
+                <p class="text-gray-600 dark:text-gray-300 mt-2">¿Estás seguro que deseas eliminar este usuario?</p>
+            </div>
+            <div class="flex space-x-2">
+                <button id="confirmDeleteBtn" class="grow bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors">Eliminar</button>
+                <button onclick="closeDeleteModal()" class="grow bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-4 py-2 rounded-lg transition-colors">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State management
+        let users = [];
+        let currentUserIndex = null;
+        let sortConfig = { field: null, ascending: true };
+        let currentPage = 1;
+        const itemsPerPage = 5;
+
+        // Dark mode toggle
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.classList.add('dark');
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => document.documentElement.classList.toggle('dark', e.matches));
+        document.getElementById('darkModeToggle').addEventListener('click', () => document.documentElement.classList.toggle('dark'));
+
+        // Notification
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.className = 'fixed top-4 right-4 max-w-sm p-4 rounded-lg shadow-lg transform transition-transform duration-300 z-50';
+            notification.classList.add(type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-yellow-500', 'text-white');
+            notification.textContent = message;
+            notification.classList.remove('translate-x-full');
+            setTimeout(() => notification.classList.add('translate-x-full'), 3000);
+        }
+
+        // Avatar generation
+        function generateAvatar(username, lastname) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 200;
+            canvas.height = 200;
+            const colors = ['#5D5CDE', '#FF6B6B', '#4ECDC4', '#FF8C42', '#A3A1DC', '#6D9DC5'];
+            const colorIndex = Math.floor((username.charCodeAt(0) + lastname.charCodeAt(0)) % colors.length);
+            ctx.fillStyle = colors[colorIndex];
+            ctx.fillRect(0, 0, 200, 200);
+            ctx.font = 'bold 100px Arial';
+            ctx.fillStyle = '#FFFFFF';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText((username.charAt(0) + lastname.charAt(0)).toUpperCase(), 100, 100);
+            return canvas.toDataURL('image/png');
+        }
+
+        // Modal handling
+        function openUserModal(index = null) {
+            currentUserIndex = index;
+            const modal = document.getElementById('userModal');
+            const title = document.getElementById('modalTitle');
+            const form = document.getElementById('userForm');
+            const avatar = document.getElementById('avatarPreview');
+            document.querySelectorAll('.text-red-500').forEach(el => el.classList.add('hidden'));
+
+            if (index !== null) {
+                title.textContent = 'Editar Usuario';
+                const user = users[index];
+                document.getElementById('username').value = user.username;
+                document.getElementById('lastname').value = user.lastname;
+                document.getElementById('email').value = user.email;
+                document.getElementById('role').value = user.role;
+                avatar.innerHTML = `<img src="${user.photo}" alt="${user.username}" class="w-full h-full object-cover">`;
+            } else {
+                title.textContent = 'Agregar Usuario';
+                form.reset();
+                avatar.innerHTML = `<i class="fas fa-user text-4xl text-gray-400 dark:text-gray-500"></i>`;
+            }
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() { document.getElementById('userModal').classList.add('hidden'); }
+        function openDeleteModal(index) { currentUserIndex = index; document.getElementById('deleteModal').classList.remove('hidden'); }
+        function closeDeleteModal() { document.getElementById('deleteModal').classList.add('hidden'); }
+
+        // Form validation
+        function validateField(field, errorElement, message, condition) {
+            if (condition) {
+                errorElement.textContent = message;
+                errorElement.classList.remove('hidden');
+                return false;
+            }
+            errorElement.classList.add('hidden');
+            return true;
+        }
+
+        function validateForm() {
+            const username = document.getElementById('username').value.trim();
+            const lastname = document.getElementById('lastname').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const role = document.getElementById('role').value;
+            return [
+                validateField('username', document.getElementById('usernameError'), 'El nombre es obligatorio', !username),
+                validateField('lastname', document.getElementById('lastnameError'), 'El apellido es obligatorio', !lastname),
+                validateField('email', document.getElementById('emailError'), 'Correo inválido', !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)),
+                validateField('role', document.getElementById('roleError'), 'Seleccione un rol', !role)
+            ].every(v => v);
+        }
+
+        // Save user
+        function saveUser(e) {
+            e.preventDefault();
+            if (!validateForm()) return;
+
+            const userData = {
+                username: document.getElementById('username').value.trim(),
+                lastname: document.getElementById('lastname').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                role: document.getElementById('role').value
+            };
+
+            if (currentUserIndex !== null) {
+                users[currentUserIndex] = { ...users[currentUserIndex], ...userData };
+                if (users[currentUserIndex].username !== userData.username || users[currentUserIndex].lastname !== userData.lastname) {
+                    users[currentUserIndex].photo = generateAvatar(userData.username, userData.lastname);
+                }
+                showNotification('Usuario actualizado');
+            } else {
+                const newId = users.length ? Math.max(...users.map(u => u.id)) + 1 : 1;
+                users.push({ id: newId, photo: generateAvatar(userData.username, userData.lastname), ...userData });
+                showNotification('Usuario agregado');
+            }
+            filterAndRenderUsers();
+            closeModal();
+        }
+
+        // Delete user
+        function deleteUser() {
+            if (currentUserIndex !== null) {
+                users.splice(currentUserIndex, 1);
+                filterAndRenderUsers();
+                closeDeleteModal();
+                showNotification('Usuario eliminado');
+            }
+        }
+
+        // Sort table
+        function sortTable(field) {
+            sortConfig.field = field;
+            sortConfig.ascending = sortConfig.field === field ? !sortConfig.ascending : true;
+            users.sort((a, b) => {
+                const valueA = String(a[field]).toLowerCase();
+                const valueB = String(b[field]).toLowerCase();
+                return sortConfig.ascending ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
+            });
+            filterAndRenderUsers();
+        }
+
+        // Filter and paginate
+        function filterAndRenderUsers() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const role = document.getElementById('roleFilter').value;
+            const filtered = users.filter(u => 
+                (u.username.toLowerCase().includes(search) || u.lastname.toLowerCase().includes(search) || u.email.toLowerCase().includes(search) || u.id.toString().includes(search)) &&
+                (role === 'all' || u.role === role)
+            );
+
+            const totalPages = Math.ceil(filtered.length / itemsPerPage);
+            document.getElementById('totalPages').textContent = totalPages;
+            document.getElementById('currentPage').textContent = currentPage;
+            document.getElementById('userCount').textContent = filtered.length;
+            document.getElementById('prevPage').disabled = currentPage === 1;
+            document.getElementById('nextPage').disabled = currentPage === totalPages || totalPages === 0;
+
+            const start = (currentPage - 1) * itemsPerPage;
+            const paginated = filtered.slice(start, start + itemsPerPage);
+            renderUsersTable(paginated);
+        }
+
+        // Render table
+        function renderUsersTable(data) {
+            const tbody = document.getElementById('users-table').querySelector('tbody');
+            tbody.innerHTML = data.length ? '' : '<tr><td colspan="7" class="p-6 text-center text-gray-500 dark:text-gray-400">No hay usuarios registrados</td></tr>';
+
+            data.forEach((user, index) => {
+                const originalIndex = users.findIndex(u => u.id === user.id);
+                const row = document.createElement('tr');
+                row.className = 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors fade-in';
+                const roleStyles = {
+                    Admin: 'bg-red-600', Cliente: 'bg-blue-600', Editor: 'bg-green-600', Invitado: 'bg-yellow-600'
+                };
+                row.innerHTML = `
+                    <td class="p-3 text-sm">${user.id}</td>
+                    <td class="p-3"><img src="${user.photo}" alt="${user.username}" class="w-10 h-10 rounded-full object-cover"></td>
+                    <td class="p-3 font-medium">${user.username}</td>
+                    <td class="p-3">${user.lastname}</td>
+                    <td class="p-3">${user.email}</td>
+                    <td class="p-3"><span class="px-2 py-1 rounded-full text-xs font-medium text-white ${roleStyles[user.role] || 'bg-gray-600'}">${user.role}</span></td>
+                    <td class="p-3 text-center space-x-2">
+                        <button class="edit-btn p-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"><i class="fas fa-edit"></i></button>
+                        <button class="delete-btn p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"><i class="fas fa-trash"></i></button>
+                    </td>
+                `;
+                row.querySelector('.edit-btn').addEventListener('click', () => openUserModal(originalIndex));
+                row.querySelector('.delete-btn').addEventListener('click', () => openDeleteModal(originalIndex));
+                tbody.appendChild(row);
+            });
+        }
+
+        // Export to CSV
+        function exportToCSV() {
+            const headers = ['ID,Usuario,Apellido,Gmail,Rol\n'];
+            const rows = users.map(u => `${u.id},${u.username},${u.lastname},${u.email},${u.role}`).join('\n');
+            const csv = headers + rows;
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'usuarios.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+            showNotification('Tabla exportada como CSV');
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('addUserBtn').addEventListener('click', () => openUserModal());
+            document.getElementById('userForm').addEventListener('submit', saveUser);
+            document.getElementById('confirmDeleteBtn').addEventListener('click', deleteUser);
+            document.getElementById('searchInput').addEventListener('input', () => { currentPage = 1; filterAndRenderUsers(); });
+            document.getElementById('roleFilter').addEventListener('change', () => { currentPage = 1; filterAndRenderUsers(); });
+            document.getElementById('prevPage').addEventListener('click', () => { if (currentPage > 1) { currentPage--; filterAndRenderUsers(); } });
+            document.getElementById('nextPage').addEventListener('click', () => { currentPage++; filterAndRenderUsers(); });
+            document.getElementById('exportBtn').addEventListener('click', exportToCSV);
+
+            // Sample data
+            users = [
+                { id: 4, username: 'Dawary', lastname: 'Romirez', email: 'dawary@gmail.com', role: 'Admin', photo: generateAvatar('Dawary', 'Romirez') },
+                { id: 20, username: 'John', lastname: 'Smith', email: 'john@gmail.com', role: 'Cliente', photo: generateAvatar('John', 'Smith') },
+                { id: 8, username: 'Maria', lastname: 'Gomez', email: 'maria@gmail.com', role: 'Editor', photo: generateAvatar('Maria', 'Gomez') },
+                { id: 15, username: 'Carlos', lastname: 'Lopez', email: 'carlos@gmail.com', role: 'Invitado', photo: generateAvatar('Carlos', 'Lopez') }
+            ];
+            filterAndRenderUsers();
+        });
+    </script>
+</body>
+</html>

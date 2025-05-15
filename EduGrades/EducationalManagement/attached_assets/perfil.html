@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="es" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil de Profesor - Sistema de Calificaciones</title>
+    
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            300: '#c4b5fd',
+                            400: '#a78bfa',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                        },
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out',
+                        'scale-in': 'scaleIn 0.5s ease-out',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        scaleIn: {
+                            '0%': { transform: 'scale(0.95)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' },
+                        },
+                    },
+                },
+            },
+        }
+    </script>
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300">
+    <!-- Navbar -->
+    <nav class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="#" class="flex items-center">
+                        <i class="fas fa-graduation-cap text-primary-600 dark:text-primary-400 text-xl mr-2"></i>
+                        <span class="font-bold text-xl">EduGrade</span>
+                    </a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400" aria-label="Cambiar tema">
+                        <i class="fas fa-moon dark:hidden"></i>
+                        <i class="fas fa-sun hidden dark:block"></i>
+                    </button>
+                    <div class="relative">
+                        <button id="notifications-btn" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="Notificaciones">
+                            <i class="fas fa-bell"></i>
+                        </button>
+                        <span class="absolute top-0 right-0 h-4 w-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">5</span>
+                        
+                        <!-- Dropdown de notificaciones (oculto por defecto) -->
+                        <div id="notifications-dropdown" class="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 hidden animate-fade-in">
+                            <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                                <h3 class="font-semibold">Notificaciones</h3>
+                            </div>
+                            <div class="max-h-96 overflow-y-auto">
+                                <a href="#" class="block p-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-700">
+                                    <div class="flex">
+                                        <div class="flex-shrink-0 h-9 w-9 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 mr-3">
+                                            <i class="fas fa-file-alt"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="text-sm font-medium">Nueva entrega: Proyecto Final</p>
+                                            <p class="text-xs text-gray-600 dark:text-gray-400">Alumno: Carlos García - Hace 10 min</p>
+                                        </div>
+                                    </div>
+                                </a>
+                                <a href="#" class="block p-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-700">
+                                    <div class="flex">
+                                        <div class="flex-shrink-0 h-9 w-9 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center text-red-600 dark:text-red-400 mr-3">
+                                            <i class="fas fa-exclamation-circle"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="text-sm font-medium">Recordatorio: Cierre de calificaciones</p>
+                                            <p class="text-xs text-gray-600 dark:text-gray-400">Vence mañana a las 23:59</p>
+                                        </div>
+                                    </div>
+                                </a>
+                                <a href="#" class="block p-3 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                    <div class="flex">
+                                        <div class="flex-shrink-0 h-9 w-9 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-600 dark:text-green-400 mr-3">
+                                            <i class="fas fa-calendar-alt"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="text-sm font-medium">Junta departamental</p>
+                                            <p class="text-xs text-gray-600 dark:text-gray-400">Jueves, 20 de Noviembre - 15:00</p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="p-2 border-t border-gray-200 dark:border-gray-700">
+                                <a href="#" class="block text-center text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300">Ver todas las notificaciones</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <button id="profile-menu-btn" class="flex items-center space-x-2 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <div class="h-8 w-8 rounded-full overflow-hidden">
+                                <img src="https://via.placeholder.com/150" alt="Foto de perfil" class="h-full w-full object-cover">
+                            </div>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+                        
+                        <!-- Dropdown del perfil (oculto por defecto) -->
+                        <div id="profile-dropdown" class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 hidden animate-fade-in">
+                            <div class="p-3 border-b border-gray-200 dark:border-gray-700 text-center">
+                                <p class="font-semibold">Dr. Carlos Martínez</p>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">carlos.martinez@example.com</p>
+                            </div>
+                            <div>
+                                <a href="#" class="block p-3 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center">
+                                    <i class="fas fa-user-cog w-5 text-gray-500 dark:text-gray-400"></i>
+                                    <span>Configuración</span>
+                                </a>
+                                <a href="#" class="block p-3 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center">
+                                    <i class="fas fa-question-circle w-5 text-gray-500 dark:text-gray-400"></i>
+                                    <span>Ayuda</span>
+                                </a>
+                                <a href="#" class="block p-3 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center text-red-600 dark:text-red-400">
+                                    <i class="fas fa-sign-out-alt w-5"></i>
+                                    <span>Cerrar sesión</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-4xl mx-auto px-4 py-8">
+        <!-- Tarjeta principal del perfil -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden animate-scale-in">
+            <div class="bg-gradient-to-r from-primary-600 to-indigo-600 dark:from-primary-700 dark:to-indigo-800 h-40 relative">
+                <!-- Botón editar -->
+                <button class="absolute top-4 right-4 bg-white dark:bg-gray-800 rounded-full p-2 shadow-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200" aria-label="Editar perfil">
+                    <i class="fas fa-pencil text-gray-700 dark:text-gray-200"></i>
+                </button>
+                
+                <!-- Foto de perfil -->
+                <div class="absolute -bottom-16 left-8">
+                    <div class="h-32 w-32 rounded-full border-4 border-white dark:border-gray-800 overflow-hidden shadow-lg">
+                        <img src="https://via.placeholder.com/150" alt="Foto de perfil del Dr. Carlos Martínez" class="h-full w-full object-cover">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="pt-20 pb-8 px-8">
+                <div class="flex flex-col md:flex-row md:justify-between md:items-start">
+                    <div>
+                        <h1 class="text-2xl font-bold">Dr. Carlos Martínez</h1>
+                        <p class="text-gray-600 dark:text-gray-400 flex items-center">
+                            <i class="fas fa-chalkboard-teacher mr-2"></i>
+                            Profesor de Ingeniería Informática
+                        </p>
+                        <div class="mt-2 flex items-center text-gray-600 dark:text-gray-400">
+                            <i class="fas fa-building mr-2"></i>
+                            <span>Facultad de Ciencias Exactas</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 md:mt-0 flex space-x-4">
+                        <div class="flex flex-col items-center bg-primary-50 dark:bg-primary-900/30 px-4 py-2 rounded-lg border border-primary-100 dark:border-primary-800">
+                            <span class="text-sm text-primary-700 dark:text-primary-300">Grupos</span>
+                            <span class="text-2xl font-bold text-primary-700 dark:text-primary-300">5</span>
+                        </div>
+                        <div class="flex flex-col items-center bg-indigo-50 dark:bg-indigo-900/30 px-4 py-2 rounded-lg border border-indigo-100 dark:border-indigo-800">
+                            <span class="text-sm text-indigo-700 dark:text-indigo-300">Alumnos</span>
+                            <span class="text-2xl font-bold text-indigo-700 dark:text-indigo-300">126</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Sección Clases que imparte -->
+                    <div class="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-6 border border-gray-100 dark:border-gray-700">
+                        <h2 class="text-lg font-semibold flex items-center mb-4">
+                            <i class="fas fa-book text-primary-500 dark:text-primary-400 mr-2"></i>
+                            Clases que imparte
+                        </h2>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <div class="h-8 w-8 rounded-md bg-primary-100 dark:bg-primary-900/50 flex items-center justify-center text-primary-600 dark:text-primary-400 mr-3">
+                                        <i class="fas fa-code"></i>
+                                    </div>
+                                    <span>Programación Avanzada</span>
+                                </div>
+                                <a href="#" class="text-sm text-primary-600 dark:text-primary-400 hover:underline">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>
+                            
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <div class="h-8 w-8 rounded-md bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 mr-3">
+                                        <i class="fas fa-database"></i>
+                                    </div>
+                                    <span>Bases de Datos</span>
+                                </div>
+                                <a href="#" class="text-sm text-primary-600 dark:text-primary-400 hover:underline">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>
+                            
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <div class="h-8 w-8 rounded-md bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-600 dark:text-green-400 mr-3">
+                                        <i class="fas fa-globe"></i>
+                                    </div>
+                                    <span>Desarrollo Web</span>
+                                </div>
+                                <a href="#" class="text-sm text-primary-600 dark:text-primary-400 hover:underline">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>
+                            
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <div class="h-8 w-8 rounded-md bg-yellow-100 dark:bg-yellow-900/50 flex items-center justify-center text-yellow-600 dark:text-yellow-400 mr-3">
+                                        <i class="fas fa-robot"></i>
+                                    </div>
+                                    <span>Inteligencia Artificial</span>
+                                </div>
+                                <a href="#" class="text-sm text-primary-600 dark:text-primary-400 hover:underline">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>
+                            
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <div class="h-8 w-8 rounded-md bg-red-100 dark:bg-red-900/50 flex items-center justify-center text-red-600 dark:text-red-400 mr-3">
+                                        <i class="fas fa-network-wired"></i>
+                                    </div>
+                                    <span>Redes de Computadoras</span>
+                                </div>
+                                <a href="#" class="text-sm text-primary-600 dark:text-primary-400 hover:underline">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección Información Personal -->
+                    <div class="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-6 border border-gray-100 dark:border-gray-700">
+                        <h2 class="text-lg font-semibold flex items-center mb-4">
+                            <i class="fas fa-user text-primary-500 dark:text-primary-400 mr-2"></i>
+                            Información Personal
+                        </h2>
+                        <ul class="space-y-4">
+                            <li class="flex items-center">
+                                <div class="h-8 w-8 rounded-md bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-400 mr-3">
+                                    <i class="fas fa-envelope"></i>
+                                </div>
+                                <div>
+                                    <span class="text-sm text-gray-500 dark:text-gray-400">Email</span>
+                                    <p>carlos.martinez@example.com</p>
+                                </div>
+                            </li>
+                            <li class="flex items-center">
+                                <div class="h-8 w-8 rounded-md bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-400 mr-3">
+                                    <i class="fas fa-phone"></i>
+                                </div>
+                                <div>
+                                    <span class="text-sm text-gray-500 dark:text-gray-400">Teléfono</span>
+                                    <p>+34 612 345 678</p>
+                                </div>
+                            </li>
+                            <li class="flex items-center">
+                                <div class="h-8 w-8 rounded-md bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-400 mr-3">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div>
+                                    <span class="text-sm text-gray-500 dark:text-gray-400">Horario de oficina</span>
+                                    <p>Martes y Jueves 15:00 - 17:00</p>
+                                </div>
+                            </li>
+                            <li class="flex items-center">
+                                <div class="h-8 w-8 rounded-md bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-400 mr-3">
+                                    <i class="fas fa-graduation-cap"></i>
+                                </div>
+                                <div>
+                                    <span class="text-sm text-gray-500 dark:text-gray-400">Departamento</span>
+                                    <p>Ciencias de la Computación</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Sección Últimas Entregas -->
+                <div class="mt-6 bg-gray-50 dark:bg-gray-800/50 rounded-xl p-6 border border-gray-100 dark:border-gray-700">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-semibold flex items-center">
+                            <i class="fas fa-inbox text-primary-500 dark:text-primary-400 mr-2"></i>
+                            Últimas entregas por calificar
+                        </h2>
+                        <span class="px-2 py-1 text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-full">
+                            8 pendientes
+                        </span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead>
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Alumno</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Asignatura</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Entrega</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Fecha</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                                <tr class="hover:bg-gray-100 dark:hover:bg-gray-700/50">
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="h-8 w-8 rounded-full mr-2 overflow-hidden">
+                                                <img src="https://via.placeholder.com/150" alt="Avatar" class="h-full w-full object-cover">
+                                            </div>
+                                            <span>Ana García</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap">Desarrollo Web</td>
+                                    <td class="px-4 py-3 whitespace-nowrap">Proyecto Final</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-gray-500 dark:text-gray-400 text-sm">Hoy 14:35</td>
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <button class="bg-primary-100 dark:bg-primary-900/50 hover:bg-primary-200 dark:hover:bg-primary-800 text-primary-700 dark:text-primary-300 px-3 py-1 rounded-md text-sm transition-colors duration-200">
+                                            Calificar
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-gray-100 dark:hover:bg-gray-700/50">
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="h-8 w-8 rounded-full mr-2 overflow-hidden">
+                                                <img src="https://via.placeholder.com/150" alt="Avatar" class="h-full w-full object-cover">
+                                            </div>
+                                            <span>Miguel Fernández</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap">Bases de Datos</td>
+                                    <td class="px-4 py-3 whitespace-nowrap">Ejercicio Práctico 3</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-gray-500 dark:text-gray-400 text-sm">Ayer 18:22</td>
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <button class="bg-primary-100 dark:bg-primary-900/50 hover:bg-primary-200 dark:hover:bg-primary-800 text-primary-700 dark:text-primary-300 px-3 py-1 rounded-md text-sm transition-colors duration-200">
+                                            Calificar
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-gray-100 dark:hover:bg-gray-700/50">
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="h-8 w-8 rounded-full mr-2 overflow-hidden">
+                                                <img src="https://via.placeholder.com/150" alt="Avatar" class="h-full w-full object-cover">
+                                            </div>
+                                            <span>Laura Sánchez</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap">Inteligencia Artificial</td>
+                                    <td class="px-4 py-3 whitespace-nowrap">Informe de Investigación</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-gray-500 dark:text-gray-400 text-sm">12/Nov/2023</td>
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <button class="bg-primary-100 dark:bg-primary-900/50 hover:bg-primary-200 dark:hover:bg-primary-800 text-primary-700 dark:text-primary-300 px-3 py-1 rounded-md text-sm transition-colors duration-200">
+                                            Calificar
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-4 flex justify-center">
+                        <a href="#" class="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 text-sm font-medium flex items-center">
+                            Ver todas las entregas pendientes
+                            <i class="fas fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Sección Calendario de Clases -->
+                <div class="mt-6 bg-gray-50 dark:bg-gray-800/50 rounded-xl p-6 border border-gray-100 dark:border-gray-700">
+                    <h2 class="text-lg font-semibold flex items-center mb-4">
+                        <i class="fas fa-calendar-alt text-primary-500 dark:text-primary-400 mr-2"></i>
+                        Próximas Clases
+                    </h2>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-900/30">
+                            <div class="flex items-center">
+                                <div class="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 mr-3">
+                                    <i class="fas fa-code"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-medium">Programación Avanzada</h3>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                                        <i class="fas fa-users mr-1"></i>
+                                        Grupo A - Aula 204
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="px-3 py-1 text-xs font-medium bg-blue-200 dark:bg-blue-800 text-blue-700 dark:text-blue-300 rounded-full">Hoy</span>
+                                <p class="text-sm mt-1">15:30 - 17:30</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-100 dark:border-green-900/30">
+                            <div class="flex items-center">
+                                <div class="h-10 w-10 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-600 dark:text-green-400 mr-3">
+                                    <i class="fas fa-globe"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-medium">Desarrollo Web</h3>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                                        <i class="fas fa-users mr-1"></i>
+                                        Grupo C - Laboratorio 3
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="px-3 py-1 text-xs font-medium bg-green-200 dark:bg-green-800 text-green-700 dark:text-green-300 rounded-full">Mañana</span>
+                                <p class="text-sm mt-1">09:00 - 11:00</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-100 dark:border-yellow-900/30">
+                            <div class="flex items-center">
+                                <div class="h-10 w-10 rounded-full bg-yellow-100 dark:bg-yellow-900/50 flex items-center justify-center text-yellow-600 dark:text-yellow-400 mr-3">
+                                    <i class="fas fa-robot"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-medium">Inteligencia Artificial</h3>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                                        <i class="fas fa-users mr-1"></i>
+                                        Grupo B - Aula 108
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="px-3 py-1 text-xs font-medium bg-yellow-200 dark:bg-yellow-800 text-yellow-700 dark:text-yellow-300 rounded-full">Viernes</span>
+                                <p class="text-sm mt-1">12:00 - 14:00</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex justify-center">
+                        <button id="open-calendar-modal" class="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 text-sm font-medium flex items-center">
+                            Ver calendario completo
+                            <i class="fas fa-calendar-week ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Herramientas rápidas -->
+                <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <a href="#" class="flex items-center justify-center p-4 bg-primary-100 dark:bg-primary-900/40 hover:bg-primary-200 dark:hover:bg-primary-800/60 text-primary-700 dark:text-primary-300 rounded-xl transition-colors duration-200 border border-primary-200 dark:border-primary-800">
+                        <i class="fas fa-plus-circle mr-2"></i>
+                        <span>Nueva evaluación</span>
+                    </a>
+                    <a href="#" class="flex items-center justify-center p-4 bg-blue-100 dark:bg-blue-900/40 hover:bg-blue-200 dark:hover:bg-blue-800/60 text-blue-700 dark:text-blue-300 rounded-xl transition-colors duration-200 border border-blue-200 dark:border-blue-800">
+                        <i class="fas fa-file-import mr-2"></i>
+                        <span>Importar calificaciones</span>
+                    </a>
+                    <a href="#" class="flex items-center justify-center p-4 bg-green-100 dark:bg-green-900/40 hover:bg-green-200 dark:hover:bg-green-800/60 text-green-700 dark:text-green-300 rounded-xl transition-colors duration-200 border border-green-200 dark:border-green-800">
+                        <i class="fas fa-envelope mr-2"></i>
+                        <span>Enviar comunicado</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de calendario (oculto por defecto) -->
+        <div id="calendar-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden animate-fade-in">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                    <h3 class="text-lg font-semibold">Calendario de Clases</h3>
+                    <button id="close-calendar-modal" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="p-4">
+                    <div class="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 text-center">
+                        <p class="text-gray-600 dark:text-gray-400">
+                            <i class="fas fa-calendar-alt text-4xl mb-2"></i><br>
+                            Aquí se mostraría el calendario completo con todas las clases y eventos.
+                        </p>
+                    </div>
+                </div>
+                <div class="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
+                    <button id="confirm-calendar-modal" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md">
+                        Aceptar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
+            <p>© 2023 EduGrade. Todos los derechos reservados.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Toggle dark mode
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        
+        // Check for dark mode preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        
+        // Listen for theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+        
+        // Handle manual dark mode toggle
+        themeToggleBtn.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+        });
+        
+        // Notifications dropdown toggle
+        const notificationsBtn = document.getElementById('notifications-btn');
+        const notificationsDropdown = document.getElementById('notifications-dropdown');
+        
+        notificationsBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            notificationsDropdown.classList.toggle('hidden');
+            
+            // Close profile dropdown if open
+            if (!profileDropdown.classList.contains('hidden')) {
+                profileDropdown.classList.add('hidden');
+            }
+        });
+        
+        // Profile dropdown toggle
+        const profileMenuBtn = document.getElementById('profile-menu-btn');
+        const profileDropdown = document.getElementById('profile-dropdown');
+        
+        profileMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            profileDropdown.classList.toggle('hidden');
+            
+            // Close notifications dropdown if open
+            if (!notificationsDropdown.classList.contains('hidden')) {
+                notificationsDropdown.classList.add('hidden');
+            }
+        });
+        
+        // Close dropdowns when clicking elsewhere
+        document.addEventListener('click', () => {
+            if (!notificationsDropdown.classList.contains('hidden')) {
+                notificationsDropdown.classList.add('hidden');
+            }
+            if (!profileDropdown.classList.contains('hidden')) {
+                profileDropdown.classList.add('hidden');
+            }
+        });
+        
+        // Calendar modal controls
+        const openCalendarModalBtn = document.getElementById('open-calendar-modal');
+        const calendarModal = document.getElementById('calendar-modal');
+        const closeCalendarModalBtn = document.getElementById('close-calendar-modal');
+        const confirmCalendarModalBtn = document.getElementById('confirm-calendar-modal');
+        
+        openCalendarModalBtn.addEventListener('click', () => {
+            calendarModal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
+        });
+        
+        closeCalendarModalBtn.addEventListener('click', () => {
+            calendarModal.classList.add('hidden');
+            document.body.style.overflow = ''; // Re-enable scrolling
+        });
+        
+        confirmCalendarModalBtn.addEventListener('click', () => {
+            calendarModal.classList.add('hidden');
+            document.body.style.overflow = ''; // Re-enable scrolling
+        });
+        
+        // Close modal when clicking outside of it
+        calendarModal.addEventListener('click', (e) => {
+            if (e.target === calendarModal) {
+                calendarModal.classList.add('hidden');
+                document.body.style.overflow = ''; // Re-enable scrolling
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración | EduGrade</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body class="bg-gray-100">
+    
+    <!-- Contenedor principal -->
+    <div class="max-w-4xl mx-auto mt-10 bg-white p-6 rounded-lg shadow-md">
+        
+        <!-- Título -->
+        <h2 class="text-2xl font-semibold text-gray-800 mb-6">Configuración de Cuenta</h2>
+
+        <!-- Navegación -->
+        <nav class="border-b pb-3 mb-6">
+            <ul class="flex space-x-6 text-gray-600">
+                <li><a href="#perfil" class="hover:text-blue-500">Perfil</a></li>
+                <li><a href="#preferencias" class="hover:text-blue-500">Preferencias</a></li>
+                <li><a href="#seguridad" class="hover:text-blue-500">Seguridad</a></li>
+            </ul>
+        </nav>
+
+        <!-- Sección de Perfil -->
+        <section id="perfil">
+            <h3 class="text-xl font-semibold text-gray-700 mb-4">Perfil</h3>
+            <form class="space-y-4">
+                <div>
+                    <label class="block text-gray-600">Nombre</label>
+                    <input type="text" class="w-full p-2 border rounded" placeholder="Tu nombre">
+                </div>
+                <div>
+                    <label class="block text-gray-600">Correo Electrónico</label>
+                    <input type="email" class="w-full p-2 border rounded" placeholder="tuemail@example.com">
+                </div>
+                <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Guardar Cambios</button>
+            </form>
+        </section>
+
+        <!-- Separador -->
+        <hr class="my-6">
+
+        <!-- Sección de Preferencias -->
+        <section id="preferencias">
+            <h3 class="text-xl font-semibold text-gray-700 mb-4">Preferencias</h3>
+            <form class="space-y-4">
+                <div>
+                    <label class="block text-gray-600">Idioma</label>
+                    <select class="w-full p-2 border rounded">
+                        <option>Español</option>
+                        <option>Inglés</option>
+                    </select>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <input type="checkbox" id="notificaciones" class="w-4 h-4">
+                    <label for="notificaciones" class="text-gray-600">Recibir notificaciones</label>
+                </div>
+                <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Guardar Cambios</button>
+            </form>
+        </section>
+
+        <!-- Separador -->
+        <hr class="my-6">
+
+        <!-- Sección de Seguridad -->
+        <section id="seguridad">
+            <h3 class="text-xl font-semibold text-gray-700 mb-4">Seguridad</h3>
+            <form class="space-y-4">
+                <div>
+                    <label class="block text-gray-600">Contraseña Actual</label>
+                    <input type="password" class="w-full p-2 border rounded" placeholder="••••••••">
+                </div>
+                <div>
+                    <label class="block text-gray-600">Nueva Contraseña</label>
+                    <input type="password" class="w-full p-2 border rounded" placeholder="••••••••">
+                </div>
+                <div>
+                    <label class="block text-gray-600">Confirmar Contraseña</label>
+                    <input type="password" class="w-full p-2 border rounded" placeholder="••••••••">
+                </div>
+                <button class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Actualizar Contraseña</button>
+            </form>
+        </section>
+
+    </div>
+
+</body>
+</html>
